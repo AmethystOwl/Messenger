@@ -12,10 +12,6 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class HomeFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = HomeFragment()
-    }
-
     private val viewModel: HomeViewModel by viewModels()
 
     override fun onCreateView(

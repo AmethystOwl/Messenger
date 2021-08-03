@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.example.messenger.Repository
 import com.example.messenger.databinding.LoginFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,9 +16,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class LoginFragment @Inject constructor() : Fragment() {
     private val TAG = "LoginFragment"
-
-    @Inject
-    lateinit var repo: Repository
 
     @ExperimentalCoroutinesApi
     @InternalCoroutinesApi

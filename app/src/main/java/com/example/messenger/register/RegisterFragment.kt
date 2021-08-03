@@ -15,14 +15,11 @@ import com.example.messenger.databinding.RegisterFragmentBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
     private val TAG = "RegisterFragment"
 
-    @Inject
-    lateinit var repo: Repository
     private val viewModel: RegisterViewModel by viewModels()
     private lateinit var binding: RegisterFragmentBinding
 
