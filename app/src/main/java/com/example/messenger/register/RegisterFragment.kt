@@ -22,7 +22,6 @@ class RegisterFragment : Fragment() {
 
     private val viewModel: RegisterViewModel by viewModels()
     private lateinit var binding: RegisterFragmentBinding
-
     @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onCreateView(
