@@ -1,6 +1,5 @@
 package com.example.messenger
 
-import android.content.Context
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
@@ -8,11 +7,21 @@ import java.util.*
 
 open class Utils {
     companion object {
-
-
-        fun Context.snackBar(view: View, text: String) {
-            Snackbar.make(this, view, text, Snackbar.LENGTH_LONG).show()
-
+        fun View.showSnackbar(
+            view: View,
+            msg: String,
+            length: Int,
+            actionMessage: CharSequence?,
+            action: ((View) -> Unit)?
+        ) {
+            val snackbar = Snackbar.make(view, msg, length)
+            if (actionMessage != null) {
+                snackbar.setAction(actionMessage) {
+                    action?.invoke(this)
+                }.show()
+            } else {
+                snackbar.show()
+            }
         }
 
         fun getTime(): String {

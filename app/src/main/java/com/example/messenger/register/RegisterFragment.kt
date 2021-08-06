@@ -10,8 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.messenger.*
-import com.example.messenger.Utils.Companion.snackBar
+import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.databinding.RegisterFragmentBinding
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
@@ -22,6 +23,7 @@ class RegisterFragment : Fragment() {
 
     private val viewModel: RegisterViewModel by viewModels()
     private lateinit var binding: RegisterFragmentBinding
+
     @InternalCoroutinesApi
     @ExperimentalCoroutinesApi
     override fun onCreateView(
@@ -87,12 +89,24 @@ class RegisterFragment : Fragment() {
             binding.passwordTextInputLayout.error = null
 
             if (yearOfBirth >= 2005) {
-                context?.snackBar(binding.coordinator, "Too young.")
+                it.showSnackbar(
+                    binding.coordinator,
+                    getString(R.string.too_young),
+                    Snackbar.LENGTH_LONG,
+                    null,
+                    null
+                )
                 binding.yearSpinner.requestFocus()
                 return@setOnClickListener
             }
             if (gender == -1) {
-                context?.snackBar(binding.coordinator, "Select your gender")
+                it.showSnackbar(
+                    binding.coordinator,
+                    getString(R.string.select_gender),
+                    Snackbar.LENGTH_LONG,
+                    null,
+                    null
+                )
                 binding.radioGroup.requestFocus()
                 return@setOnClickListener
             }
@@ -174,7 +188,7 @@ class RegisterFragment : Fragment() {
                 }
                 is DataState.Error -> {
                     Log.i(TAG, "onCreateView: DataState -> Error")
-                    showMessage(dataState.exception.message!!)
+                    showMessage(requireView(), dataState.exception.message!!)
                     viewModel.doneObserving()
                     binding.registerButton.isEnabled = true
                     binding.progressCircular.visibility = View.INVISIBLE
@@ -188,8 +202,8 @@ class RegisterFragment : Fragment() {
         return binding.root
     }
 
-    private fun showMessage(message: String) {
-        context?.snackBar(binding.coordinator, message)
+    private fun showMessage(view: View, message: String) {
+        view.showSnackbar(binding.coordinator, message, Snackbar.LENGTH_LONG, null, null)
     }
 
 }

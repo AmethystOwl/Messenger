@@ -4,14 +4,16 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/drawable/ic_avatar_foreground.xml" value="0.19791666666666666" />
+        <entry key="app/src/main/res/drawable/progress_sample.xml" value="0.2453125" />
+        <entry key="app/src/main/res/drawable/progress_sample2.xml" value="0.15416666666666667" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.19947916666666668" />
-        <entry key="app/src/main/res/layout/complete_profile_fragment.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/complete_profile_fragment.xml" value="0.25" />
         <entry key="app/src/main/res/layout/email_verification_fragment.xml" value="0.25" />
         <entry key="app/src/main/res/layout/home_fragment.xml" value="0.28125" />
-        <entry key="app/src/main/res/layout/login_fragment.xml" value="0.28125" />
+        <entry key="app/src/main/res/layout/login_fragment.xml" value="0.2" />
         <entry key="app/src/main/res/layout/phone_fragment.xml" value="0.33" />
         <entry key="app/src/main/res/layout/profile_fragment.xml" value="0.25" />
-        <entry key="app/src/main/res/layout/register_fragment.xml" value="0.22" />
+        <entry key="app/src/main/res/layout/register_fragment.xml" value="0.33" />
       </map>
     </option>
   </component>

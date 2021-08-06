@@ -33,6 +33,26 @@
     <string name="country">Country</string>
     <string name="browse">Browse</string>
     <string name="profile_picture_imageview">Profile Picture Imageview</string>
+
+    <string name="storage_permission_required">Storage access is required to pick a profile picture</string>
+    <string name="camera_permission_required">Camera access is required to take a profile picture</string>
+    <string name="ok">OK</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="camera_permission_granted">Camera permission is granted</string>
+    <string name="storage_permission_granted">Storage permission is granted</string>
+    <string name="select_gender">Select your gender</string>
+    <string name="id_retrieval_failed">Failed to retrieve user ID</string>
+    <string name="too_young">You are not old enough to register</string>
+    <string name="email_verification_sent">Verification link has been sent</string>
+    <string name="email_not_verified">Email is not verified</string>
+    <string name="email_verification_failed_err">Email Verification failed with error : %s</string>
+    <string name="upload_img_err">Error uploading Image, please try again</string>
+    <string name="upload_img_cancel">Image upload process canceled, please try again</string>
+    <string name="upload_img_success">Image uploaded successfully</string>
+    <string name="submit">Submit</string>
+
+    <string name="account_not_found">The email address you entered isn\'t connected to an account</string>
+    <string name="account_invalid_password">The password that you\'ve entered is incorrect</string>
     <string-array name="days">
         <item>1</item>
         <item>2</item>

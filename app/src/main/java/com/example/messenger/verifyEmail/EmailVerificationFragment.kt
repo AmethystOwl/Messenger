@@ -10,9 +10,11 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.messenger.Constants
 import com.example.messenger.DataState
+import com.example.messenger.R
 import com.example.messenger.UserProfile
-import com.example.messenger.Utils.Companion.snackBar
+import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.databinding.EmailVerificationFragmentBinding
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.DocumentReference
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -26,8 +28,8 @@ class EmailVerificationFragment : Fragment() {
     @InternalCoroutinesApi
     private val viewModel: EmailVerificationViewModel by viewModels()
 
-    lateinit var binding: EmailVerificationFragmentBinding
-    var userProfile: UserProfile? = null
+    private lateinit var binding: EmailVerificationFragmentBinding
+    private var userProfile: UserProfile? = null
     private lateinit var userDoc: DocumentReference
 
     @ExperimentalCoroutinesApi
@@ -67,7 +69,13 @@ class EmailVerificationFragment : Fragment() {
                 }
             }
         } else {
-            context?.snackBar(binding.coordinator, "Failed to retrieve user ID")
+            requireView().showSnackbar(
+                binding.coordinator,
+                getString(R.string.id_retrieval_failed),
+                Snackbar.LENGTH_LONG,
+                null,
+                null
+            )
             // ????
         }
         binding.verifyLaterTv.setOnClickListener {
@@ -80,7 +88,13 @@ class EmailVerificationFragment : Fragment() {
             if (viewModel.isCounterActivated.value == false) {
                 viewModel.resendVerificationCode()
                 binding.resendCodeBtn.isEnabled = false
-                context?.snackBar(binding.coordinator, "Verification link has been sent")
+                requireView().showSnackbar(
+                    binding.coordinator,
+                    getString(R.string.email_verification_sent),
+                    Snackbar.LENGTH_LONG,
+                    null,
+                    null
+                )
             }
         }
         binding.verificationDoneBtn.setOnClickListener {
@@ -91,7 +105,13 @@ class EmailVerificationFragment : Fragment() {
                             EmailVerificationFragmentDirections.actionEmailVerificationFragmentToCompleteProfileFragment()
                         )
                 } else if (!viewModel.isEmailVerified()!!) {
-                    context?.snackBar(binding.coordinator, "Email is not verified")
+                    requireView().showSnackbar(
+                        binding.coordinator,
+                        getString(R.string.email_not_verified),
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
                 }
             }
 
@@ -107,9 +127,13 @@ class EmailVerificationFragment : Fragment() {
                     }
                 }
                 is DataState.Error -> {
-                    context?.snackBar(
+
+                    requireView().showSnackbar(
                         binding.coordinator,
-                        "Email Verification failed with error ${dataState.exception}"
+                        getString(R.string.email_verification_failed_err).format(dataState.exception),
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
                     )
                     Log.i(TAG, "Email Verification failed with error ${dataState.exception}")
 

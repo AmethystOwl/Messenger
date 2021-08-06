@@ -20,6 +20,8 @@ class BindingAdapter {
             if (completeFirstName != null) {
                 text =
                     "$completeFirstName\nPlease complete your profile by adding a profile picture"
+            } else {
+                text = ""
             }
         }
 

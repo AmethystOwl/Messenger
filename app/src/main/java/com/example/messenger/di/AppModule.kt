@@ -1,8 +1,10 @@
 package com.example.messenger.di
 
+
 import com.example.messenger.Repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,8 +17,12 @@ import javax.inject.Singleton
 object AppModule {
     @Singleton
     @Provides
-    fun provideRepository(auth: FirebaseAuth, fireStore: FirebaseFirestore) =
-        Repository(auth, fireStore)
+    fun provideRepository(
+        auth: FirebaseAuth,
+        fireStore: FirebaseFirestore,
+        storage: FirebaseStorage
+    ) =
+        Repository(auth, fireStore, storage)
 
     @Singleton
     @Provides
@@ -25,6 +31,10 @@ object AppModule {
     @Singleton
     @Provides
     fun provideFireStore() = FirebaseFirestore.getInstance()
+
+    @Singleton
+    @Provides
+    fun provideStorage() = FirebaseStorage.getInstance()
 
 
 }

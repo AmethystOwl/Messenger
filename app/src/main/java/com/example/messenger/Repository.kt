@@ -1,9 +1,13 @@
 package com.example.messenger
 
+import android.net.Uri
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -13,7 +17,8 @@ import javax.inject.Inject
 
 class Repository @Inject constructor(
     private val auth: FirebaseAuth,
-    private val fireStore: FirebaseFirestore
+    private val fireStore: FirebaseFirestore,
+    private val storage: FirebaseStorage
 ) {
     private val TAG = "Repository"
 
@@ -29,8 +34,6 @@ class Repository @Inject constructor(
                         when {
                             it.isSuccessful -> {
                                 Log.i(TAG, "register: isSuccessful")
-
-                                //  TODO("create profile before sending success state.. after after successful creation of profile.")
                                 val doc = fireStore.collection(Constants.USER_COLLECTION)
                                     .document(auth.currentUser?.uid!!)
                                 doc.set(userProfile).addOnCompleteListener { docTask ->
@@ -72,9 +75,40 @@ class Repository @Inject constructor(
         return auth.currentUser
     }
 
-    suspend fun login(email: String, password: String) {
-        TODO("implement")
-    }
+    @ExperimentalCoroutinesApi
+    suspend fun login(email: String, password: String) = callbackFlow<DataState<Int>> {
+        offer(DataState.Loading)
+        auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { signInTask ->
+            when {
+                signInTask.isSuccessful -> {
+                    offer(DataState.Success(Constants.LOGIN_SUCCESSFUL))
+                }
+                signInTask.isCanceled -> {
+                    offer(DataState.Canceled)
+
+                }
+                signInTask.exception != null -> {
+                    when (signInTask.exception) {
+                        is FirebaseAuthInvalidCredentialsException -> {
+                            offer(DataState.Invalid(Constants.LOGIN_INVALID_CREDENTIALS))
+
+                        }
+                        is FirebaseAuthInvalidUserException -> {
+                            offer(DataState.Invalid(Constants.LOGIN_NO_USER))
+
+                        }
+                        else -> {
+                            offer(DataState.Error(signInTask.exception!!))
+                        }
+                    }
+                }
+            }
+
+        }
+        awaitClose()
+
+    }.flowOn(Dispatchers.IO)
+
 
     @ExperimentalCoroutinesApi
     suspend fun getCurrentUserProfile(uId: String) = callbackFlow<DataState<UserProfile?>> {
@@ -84,7 +118,7 @@ class Repository @Inject constructor(
                 when {
                     documentSnapshot.isSuccessful -> {
                         val profile = documentSnapshot.result?.toObject(UserProfile::class.java)
-                        this@callbackFlow.offer(DataState.Success(profile))
+                        offer(DataState.Success(profile))
                     }
                     documentSnapshot.isCanceled -> {
                         offer(DataState.Canceled)
@@ -95,7 +129,7 @@ class Repository @Inject constructor(
                 }
             }
         awaitClose()
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun getAuth() = auth
 
@@ -114,10 +148,58 @@ class Repository @Inject constructor(
             }
         }
         awaitClose()
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun getDocRef(collectionName: String, documentName: String) =
         fireStore.collection(collectionName).document(documentName)
 
+    @ExperimentalCoroutinesApi
+    fun uploadImg(uri: Uri, uId: String) = callbackFlow<DataState<Int>> {
 
+        offer(DataState.Loading)
+        val fileRef = storage.reference.child(Constants.STORAGE_IMAGES_FOLDER).child(uId)
+        val uploadTask = fileRef.putFile(uri)
+        uploadTask.addOnProgressListener {
+            offer(DataState.Loading)
+        }
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+
+            fileRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                task.addOnCompleteListener { downloadUri ->
+                    if (downloadUri.isSuccessful) {
+                        val docRef = fireStore.collection(Constants.USER_COLLECTION).document(uId)
+                        docRef.get().addOnCompleteListener {
+                            docRef.update(
+                                Constants.FIELD_PROFILE_PICTURE_URL,
+                                downloadUri.result.toString()
+                            )
+                            docRef.update(
+                                Constants.FIELD_PROFILE_CREATION_COMPLETED,
+                                true
+                            )
+                            offer(DataState.Success(Constants.IMAGE_UPLOAD_SUCCESSFUL))
+                        }
+                    } else if (downloadUri.isCanceled) {
+                        offer(DataState.Canceled)
+                    } else if (downloadUri.exception != null) {
+                        offer(DataState.Error(downloadUri.exception!!))
+                    }
+
+                }
+
+            } else if (task.isCanceled) {
+                offer(DataState.Canceled)
+            } else if (task.exception != null) {
+                offer(DataState.Error(task.exception!!))
+            }
+        }
+        awaitClose()
+    }.flowOn(Dispatchers.IO)
 }
