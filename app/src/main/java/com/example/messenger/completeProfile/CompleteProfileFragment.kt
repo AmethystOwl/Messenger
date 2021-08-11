@@ -57,7 +57,6 @@ class CompleteProfileFragment : Fragment() {
                             .into(binding.imageView)
                         binding.submitPictureBtn.isEnabled = true
                     }
-                    //  viewModel.uploadImg(uri, uid!!)
 
                 }
             }
@@ -92,10 +91,6 @@ class CompleteProfileFragment : Fragment() {
             if (profilePictureUrl != null && uid != null) {
                 viewModel.uploadImg(Uri.parse(profilePictureUrl), uid!!)
             }
-
-            /*   if (userProfile?.profilePictureUrl != null) {
-                    findNavController().navigate(CompleteProfileFragmentDirections.actionCompleteProfileFragmentToHomeFragment())
-                }*/
 
         }
 

@@ -4,6 +4,7 @@ import android.os.Parcelable
 import com.example.messenger.Constants.STATUS_ONLINE
 import kotlinx.android.parcel.Parcelize
 
+
 @Parcelize
 data class UserProfile(
     val accountCreationDate: String? = Utils.getTime(),
@@ -18,7 +19,9 @@ data class UserProfile(
     var friendsCount: Int? = 0,
     var status: String? = STATUS_ONLINE,
     var allowDirectMessaging: Boolean? = true,
-    var isProfileCreationCompleted: Boolean? = false
+    var isProfileCreationCompleted: Boolean? = false,
+    // TODO : Add friends list.. of uIds
+    var searchList: ArrayList<String>
 ) : Parcelable {
     constructor() : this(
         null,
@@ -33,6 +36,8 @@ data class UserProfile(
         null,
         null,
         null,
-        null
+        null,
+        ArrayList()
     )
+
 }

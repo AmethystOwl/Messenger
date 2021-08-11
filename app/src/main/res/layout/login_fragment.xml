@@ -79,6 +79,7 @@
                             android:id="@+id/email_text_input_et"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:autofillHints="emailAddress"
                             android:inputType="textEmailAddress"
                             tools:ignore="SpeakableTextPresentCheck,TextContrastCheck" />
 

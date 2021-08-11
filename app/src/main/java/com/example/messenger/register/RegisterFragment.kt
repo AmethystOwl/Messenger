@@ -162,7 +162,8 @@ class RegisterFragment : Fragment() {
                 country = binding.ccpCountry.selectedCountryName,
                 phoneNumber = fullPhoneNumber,
                 dateOfBirth = dateOfBirth,
-                status = Constants.STATUS_ONLINE
+                status = Constants.STATUS_ONLINE,
+                searchList = ArrayList()
             )
             viewModel.signUp(user, password)
 

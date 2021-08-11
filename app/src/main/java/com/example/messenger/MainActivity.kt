@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
     private lateinit var binding: ActivityMainBinding
     private val TAG = "MainActivity"
 
+    // TODO : Add option menu & search button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)

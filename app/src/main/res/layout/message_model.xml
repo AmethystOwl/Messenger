@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="data"
+            type="com.example.messenger.MessageModel" />
+    </data>
+
+    <androidx.cardview.widget.CardView
+        style="?attr/materialCardViewStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/selectableItemBackground">
+
+            <de.hdodenhof.circleimageview.CircleImageView
+                android:id="@+id/avatar_iv"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:contentDescription="@string/chat_avatar"
+                app:bindImage="@{data.pictureUrl}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:src="@tools:sample/avatars" />
+
+            <TextView
+                android:id="@+id/header_text_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="5dp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                app:bindHeader="@{data.headerText}"
+                app:layout_constraintStart_toEndOf="@+id/avatar_iv"
+                app:layout_constraintTop_toTopOf="@+id/avatar_iv"
+                tools:text="Your friend" />
+
+            <TextView
+                android:id="@+id/last_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="13dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="10dp"
+                app:bindLastMsg="@{data.bodyText}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/avatar_iv"
+                app:layout_constraintTop_toBottomOf="@+id/header_text_tv"
+                tools:text="Hey!" />
+
+            <TextView
+                android:id="@+id/date_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="32dp"
+                app:bindDate="@{data.time}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:text="12/Jun/2021" />
+
+            <!-- TODO :  Add msg state and status!-->
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</layout>

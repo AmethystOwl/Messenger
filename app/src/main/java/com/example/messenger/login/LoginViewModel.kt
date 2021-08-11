@@ -49,7 +49,6 @@ class LoginViewModel @Inject constructor(private val repo: Repository) : ViewMod
         }
     }
 
-
     fun isValidEmail(email: String): Int {
         return if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             Constants.INVALID_EMAIL_FORMAT

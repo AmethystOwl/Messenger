@@ -41,7 +41,10 @@ class LoginFragment @Inject constructor() : Fragment() {
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
-
+        viewModel.refreshCurrentUser()
+        if (viewModel.currentUser.value != null) {
+            findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
+        }
 
         binding.registerButton.setOnClickListener {
             findNavController()
@@ -54,7 +57,6 @@ class LoginFragment @Inject constructor() : Fragment() {
             viewModel.setError(null)
             val email = binding.emailTextInputEt.text.toString()
             val password = binding.passwordTextInputEt.text.toString()
-            // get current user profile, check for profile completion.. redirect accordingly
             when (checkInput(email, password)) {
                 0 -> {
                     viewModel.login(email, password)
@@ -96,7 +98,6 @@ class LoginFragment @Inject constructor() : Fragment() {
                 is DataState.Success -> {
                     binding.loginButton.isEnabled = true
                     binding.progressCircular.visibility = View.INVISIBLE
-                    // check profile completion
                     viewModel.refreshCurrentUser()
 
                 }

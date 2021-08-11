@@ -16,7 +16,7 @@
     <string name="phone_number">Phone Number</string>
     <string name="complete_your_profile">Verify your Phone Number</string>
     <string name="save">Save</string>
-    <string name="sign_out">sign out</string>
+    <string name="sign_out">Sign Out</string>
     <string name="verification_link_has_been_sent_to">Verification link has been sent to</string>
     <string name="_30">30</string>
     <string name="seconds">seconds</string>
@@ -53,6 +53,11 @@
 
     <string name="account_not_found">The email address you entered isn\'t connected to an account</string>
     <string name="account_invalid_password">The password that you\'ve entered is incorrect</string>
+    <string name="chat_avatar">chat_avatar</string>
+    <string name="search">Search</string>
+    <string name="empty_conversation">Start the conversation by saying Hi!</string>
+    <string name="start_chat">start Chat</string>
+    <string name="add_a_friend_to_start_a_conversation">Add a friend to start a conversation</string>
     <string-array name="days">
         <item>1</item>
         <item>2</item>

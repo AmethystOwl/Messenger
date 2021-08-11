@@ -7,11 +7,13 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
@@ -33,6 +35,28 @@ class Repository @Inject constructor(
                         Log.i(TAG, "register: isComplete")
                         when {
                             it.isSuccessful -> {
+                                if (userProfile.fname != null && userProfile.lname != null) {
+                                    val fullNameList =
+                                        (userProfile.fname?.lowercase()!! + " " + userProfile.lname?.lowercase()!!)
+                                            .split(' ')
+                                    val count = fullNameList.size
+                                    var nameCount = 0
+                                    for (name in fullNameList) {
+                                        nameCount++
+                                        var temp = ""
+                                        for (i in name.indices) {
+                                            temp += name[i]
+                                            userProfile.searchList.add(temp)
+                                        }
+                                        if (nameCount < count) {
+                                            userProfile.searchList.add(" ")
+                                        }
+                                    }
+                                    userProfile.searchList.add(userProfile.fname?.lowercase()!! + " " + userProfile.lname?.lowercase()!!)
+                                }
+
+
+
                                 Log.i(TAG, "register: isSuccessful")
                                 val doc = fireStore.collection(Constants.USER_COLLECTION)
                                     .document(auth.currentUser?.uid!!)
@@ -202,4 +226,76 @@ class Repository @Inject constructor(
         }
         awaitClose()
     }.flowOn(Dispatchers.IO)
+
+    fun signOut() {
+        auth.signOut()
+
+    }
+
+    fun defaultMessageQuery() {
+        TODO("Implement this function")
+    }
+
+    suspend fun defaultUserQuery() = flow<DataState<Query>> {
+        emit(DataState.Loading)
+        try {
+            val query = fireStore.collection(Constants.USER_COLLECTION)
+                .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
+                .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
+            emit(DataState.Success(query))
+        } catch (e: Exception) {
+            emit(DataState.Error(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+
+    /* @ExperimentalCoroutinesApi
+     suspend fun searchByName(
+         email: String,
+         direction: Query.Direction
+     ) = callbackFlow<ArrayList<DocumentReference?>?> {
+
+         val res = ArrayList<DocumentReference?>()
+         fireStore.collection(Constants.USER_COLLECTION)
+             .orderBy(Constants.FIELD_EMAIL, direction)
+             .whereArrayContains(Constants.FIELD_SEARCH_LIST, email)
+             .addSnapshotListener { value, error ->
+                 error?.let {
+                     throw  it
+                 }
+                 if (value != null) {
+                     for (doc in value.documents) {
+                         res.add(doc?.reference)
+                     }
+                     offer(res)
+                 } else {
+                     offer(null)
+                 }
+
+             }
+         awaitClose()
+     }
+ */
+    suspend fun filterUserQuery(name: String) =
+        flow<DataState<Query>> {
+            emit(DataState.Loading)
+            try {
+                val query = fireStore.collection(Constants.USER_COLLECTION)
+                    .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
+                    .whereArrayContains(Constants.FIELD_SEARCH_LIST, name)
+                    .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
+                emit(DataState.Success(query))
+
+            } catch (e: Exception) {
+                emit(DataState.Error(e))
+            }
+        }.flowOn(Dispatchers.IO)
+
+    fun getDefaultUserQuery(): Query {
+        return fireStore.collection(Constants.USER_COLLECTION)
+            .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
+            .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
+
+    }
+
 }

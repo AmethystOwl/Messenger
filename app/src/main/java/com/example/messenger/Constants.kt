@@ -29,6 +29,7 @@ object Constants {
 
 
     val USER_COLLECTION = "users"
+    val MESSAGE_COLLECTION = "messages"
 
     val FIELD_ACCOUNT_CREATION_DATE = "accountCreationDate"
     val FIELD_ALLOW_DIRECT_MESSAGING = "allowDirectMessaging"
@@ -43,5 +44,6 @@ object Constants {
     val FIELD_PROFILE_CREATION_COMPLETED = "profileCreationCompleted"
     val FIELD_PROFILE_PICTURE_URL = "profilePictureUrl"
     val FIELD_STATUS = "status"
+    val FIELD_SEARCH_LIST = "searchList"
 
 }
