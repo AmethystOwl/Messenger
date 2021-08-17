@@ -5,7 +5,7 @@ object Constants {
     val LOGIN_SUCCESSFUL = 301
     val LOGIN_INVALID_CREDENTIALS = -301
 
-    val STORAGE_IMAGES_FOLDER = "images"
+    val STORAGE_PROFILE_PICTURE_FOLDER = "ProfilePictures"
 
 
     val VALID_EMAIL = 101
@@ -17,6 +17,10 @@ object Constants {
 
     val PICK_IMAGE_REQEST = 654
     val VERIFICATION_EMAIL_SENT_SUCCESS = 901
+
+    val FRIEND_ADDITION_SUCCESS = 701
+    val FRIEND_ADDITION_FAIL = -701
+    val FRIEND_ADDITION_CANCEL = -702
 
     const val CAMERA_REQ_CODE = 1021
     const val EXTERNAL_REQ_CODE = 2021
@@ -39,6 +43,8 @@ object Constants {
     val FIELD_FIRST_NAME = "fname"
     val FIELD_LAST_NAME = "lname"
     val FIELD_FRIENDS_COUNT = "friendsCount"
+    val FIELD_FRIENDS_LIST = "friendsList"
+
     val FIELD_PHONE_NUMBER = "phoneNumber"
     val FIELD_PHONE_VERIFIED = "phoneVerified"
     val FIELD_PROFILE_CREATION_COMPLETED = "profileCreationCompleted"

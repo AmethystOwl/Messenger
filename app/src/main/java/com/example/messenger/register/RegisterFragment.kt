@@ -163,7 +163,8 @@ class RegisterFragment : Fragment() {
                 phoneNumber = fullPhoneNumber,
                 dateOfBirth = dateOfBirth,
                 status = Constants.STATUS_ONLINE,
-                searchList = ArrayList()
+                searchList = ArrayList(),
+                friendsList = ArrayList()
             )
             viewModel.signUp(user, password)
 

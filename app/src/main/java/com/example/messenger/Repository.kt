@@ -36,25 +36,26 @@ class Repository @Inject constructor(
                         when {
                             it.isSuccessful -> {
                                 if (userProfile.fname != null && userProfile.lname != null) {
-                                    val fullNameList =
-                                        (userProfile.fname?.lowercase()!! + " " + userProfile.lname?.lowercase()!!)
-                                            .split(' ')
-                                    val count = fullNameList.size
-                                    var nameCount = 0
-                                    for (name in fullNameList) {
-                                        nameCount++
-                                        var temp = ""
-                                        for (i in name.indices) {
-                                            temp += name[i]
-                                            userProfile.searchList.add(temp)
+                                    val fullName = userProfile.fname + " " + userProfile.lname
+                                    val fullNameArr = fullName.split(' ')
+                                    var holder = ""
+                                    for (name in fullNameArr) {
+                                        for (c in name) {
+                                            holder += c
+                                            userProfile.searchList.add(holder)
                                         }
-                                        if (nameCount < count) {
-                                            userProfile.searchList.add(" ")
-                                        }
+                                        userProfile.searchList.add("$holder ")
+                                        holder = ""
                                     }
-                                    userProfile.searchList.add(userProfile.fname?.lowercase()!! + " " + userProfile.lname?.lowercase()!!)
+                                    var fullNameHolder = ""
+                                    for (fullNameChar in fullName) {
+                                        fullNameHolder += fullNameChar
+                                        userProfile.searchList.add(fullNameHolder)
+                                    }
                                 }
-
+                                if (userProfile.email != null) {
+                                    userProfile.searchList.add(userProfile.email!!)
+                                }
 
 
                                 Log.i(TAG, "register: isSuccessful")
@@ -177,11 +178,119 @@ class Repository @Inject constructor(
     fun getDocRef(collectionName: String, documentName: String) =
         fireStore.collection(collectionName).document(documentName)
 
-    @ExperimentalCoroutinesApi
-    fun uploadImg(uri: Uri, uId: String) = callbackFlow<DataState<Int>> {
 
+    @ExperimentalCoroutinesApi
+    suspend fun addToFriendList(collectionName: String, email: String) =
+        callbackFlow<DataState<Int>> {
+            fireStore.collection(collectionName)
+                .whereEqualTo(Constants.FIELD_EMAIL, email)
+                .get()
+                .addOnCompleteListener { task ->
+                    when {
+                        task.isSuccessful -> {
+                            if (task.result?.documents?.size == 1) {
+                                task.result?.documents?.forEach { documentSnapshot ->
+                                    if (documentSnapshot.exists()) {
+                                        val uId = documentSnapshot.id
+                                        val currentUserId = auth.currentUser?.uid!!
+                                        fireStore.collection(Constants.USER_COLLECTION)
+                                            .document(currentUserId).get()
+                                            .addOnCompleteListener { currentUserDocSnapShot ->
+                                                when {
+                                                    currentUserDocSnapShot.isSuccessful -> {
+                                                        val currentUserProfile =
+                                                            currentUserDocSnapShot.result?.toObject(
+                                                                UserProfile::class.java
+                                                            )
+                                                        if (currentUserProfile != null) {
+                                                            currentUserDocSnapShot.result?.reference?.update(
+                                                                Constants.FIELD_FRIENDS_COUNT,
+                                                                currentUserProfile.friendsCount?.plus(
+                                                                    1
+                                                                )
+                                                            )
+                                                                ?.addOnCompleteListener { friendsCountTask ->
+                                                                    when {
+                                                                        friendsCountTask.isSuccessful -> {
+                                                                            currentUserProfile.friendsList.add(
+                                                                                uId
+                                                                            )
+                                                                            currentUserDocSnapShot.result?.reference?.update(
+                                                                                Constants.FIELD_FRIENDS_LIST,
+                                                                                currentUserProfile.friendsList
+                                                                            )
+                                                                                ?.addOnCompleteListener { friendsListTask ->
+                                                                                    when {
+                                                                                        friendsListTask.isSuccessful -> {
+                                                                                            offer(
+                                                                                                DataState.Success(
+                                                                                                    Constants.FRIEND_ADDITION_SUCCESS
+                                                                                                )
+                                                                                            )
+                                                                                        }
+                                                                                        friendsListTask.isCanceled -> {
+                                                                                            offer(
+                                                                                                DataState.Canceled
+                                                                                            )
+                                                                                        }
+                                                                                        friendsListTask.exception != null -> {
+                                                                                            offer(
+                                                                                                DataState.Error(
+                                                                                                    friendsCountTask.exception!!
+                                                                                                )
+                                                                                            )
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                        }
+                                                                        friendsCountTask.isCanceled -> {
+                                                                            offer(DataState.Canceled)
+                                                                        }
+                                                                        friendsCountTask.exception != null -> {
+                                                                            offer(
+                                                                                DataState.Error(
+                                                                                    friendsCountTask.exception!!
+                                                                                )
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                }
+                                                        }
+                                                    }
+                                                    currentUserDocSnapShot.isCanceled -> {
+                                                        offer(DataState.Canceled)
+                                                    }
+                                                    currentUserDocSnapShot.exception != null -> {
+                                                        offer(DataState.Error(currentUserDocSnapShot.exception!!))
+                                                    }
+                                                }
+                                            }
+                                    } else {
+                                        offer(DataState.Empty)
+                                    }
+                                }
+                            }
+
+                        }
+                        task.isCanceled -> {
+                            offer(DataState.Canceled)
+                        }
+                        task.exception != null -> {
+                            offer(DataState.Error(task.exception!!))
+
+                        }
+
+                    }
+                }
+            awaitClose()
+        }.flowOn(Dispatchers.IO)
+
+
+    @ExperimentalCoroutinesApi
+    suspend fun uploadImg(uri: Uri, uId: String) = callbackFlow<DataState<Int>> {
         offer(DataState.Loading)
-        val fileRef = storage.reference.child(Constants.STORAGE_IMAGES_FOLDER).child(uId)
+        val fileRef =
+            storage.reference.child(Constants.STORAGE_PROFILE_PICTURE_FOLDER).child(uId)
         val uploadTask = fileRef.putFile(uri)
         uploadTask.addOnProgressListener {
             offer(DataState.Loading)
@@ -198,7 +307,8 @@ class Repository @Inject constructor(
             if (task.isSuccessful) {
                 task.addOnCompleteListener { downloadUri ->
                     if (downloadUri.isSuccessful) {
-                        val docRef = fireStore.collection(Constants.USER_COLLECTION).document(uId)
+                        val docRef =
+                            fireStore.collection(Constants.USER_COLLECTION).document(uId)
                         docRef.get().addOnCompleteListener {
                             docRef.update(
                                 Constants.FIELD_PROFILE_PICTURE_URL,
@@ -228,13 +338,28 @@ class Repository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     fun signOut() {
+
         auth.signOut()
-
     }
 
-    fun defaultMessageQuery() {
-        TODO("Implement this function")
-    }
+    fun getDefaultMessageQuery() =
+        fireStore.collection(Constants.MESSAGE_COLLECTION).limit(15)
+
+    suspend fun defaultMessageQuery() = flow<DataState<Query>> {
+        emit(DataState.Loading)
+        try {
+            // TODO : Edit later
+            val query = fireStore.collection(Constants.MESSAGE_COLLECTION).limit(15)
+            emit(DataState.Success(query))
+        } catch (e: Exception) {
+            emit(DataState.Error(e))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    fun getDefaultUserQuery(): Query =
+        fireStore.collection(Constants.USER_COLLECTION)
+            .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
+            .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
 
     suspend fun defaultUserQuery() = flow<DataState<Query>> {
         emit(DataState.Loading)
@@ -249,53 +374,19 @@ class Repository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
 
-    /* @ExperimentalCoroutinesApi
-     suspend fun searchByName(
-         email: String,
-         direction: Query.Direction
-     ) = callbackFlow<ArrayList<DocumentReference?>?> {
+    suspend fun filterUserQuery(name: String) = flow<DataState<Query>> {
+        emit(DataState.Loading)
+        try {
+            val query = fireStore.collection(Constants.USER_COLLECTION)
+                .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
+                .whereArrayContains(Constants.FIELD_SEARCH_LIST, name)
+                .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
+            emit(DataState.Success(query))
 
-         val res = ArrayList<DocumentReference?>()
-         fireStore.collection(Constants.USER_COLLECTION)
-             .orderBy(Constants.FIELD_EMAIL, direction)
-             .whereArrayContains(Constants.FIELD_SEARCH_LIST, email)
-             .addSnapshotListener { value, error ->
-                 error?.let {
-                     throw  it
-                 }
-                 if (value != null) {
-                     for (doc in value.documents) {
-                         res.add(doc?.reference)
-                     }
-                     offer(res)
-                 } else {
-                     offer(null)
-                 }
+        } catch (e: Exception) {
+            emit(DataState.Error(e))
+        }
+    }.flowOn(Dispatchers.IO)
 
-             }
-         awaitClose()
-     }
- */
-    suspend fun filterUserQuery(name: String) =
-        flow<DataState<Query>> {
-            emit(DataState.Loading)
-            try {
-                val query = fireStore.collection(Constants.USER_COLLECTION)
-                    .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
-                    .whereArrayContains(Constants.FIELD_SEARCH_LIST, name)
-                    .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
-                emit(DataState.Success(query))
-
-            } catch (e: Exception) {
-                emit(DataState.Error(e))
-            }
-        }.flowOn(Dispatchers.IO)
-
-    fun getDefaultUserQuery(): Query {
-        return fireStore.collection(Constants.USER_COLLECTION)
-            .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
-            .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
-
-    }
 
 }

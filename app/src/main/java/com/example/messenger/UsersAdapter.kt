@@ -7,7 +7,10 @@ import com.example.messenger.databinding.UserModelBinding
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 
-class UsersAdapter(options: FirestoreRecyclerOptions<UserProfile>) :
+class UsersAdapter(
+    options: FirestoreRecyclerOptions<UserProfile>,
+    private val onClickListener: OnUserClickListener
+) :
     FirestoreRecyclerAdapter<UserProfile, UsersAdapter.UserModelViewHolder>(options) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserModelViewHolder {
@@ -15,12 +18,13 @@ class UsersAdapter(options: FirestoreRecyclerOptions<UserProfile>) :
     }
 
     override fun onBindViewHolder(holder: UserModelViewHolder, position: Int, model: UserProfile) {
-        holder.bind(model)
+        holder.bind(model, onClickListener)
     }
 
     class UserModelViewHolder(private val binding: UserModelBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(data: UserProfile) {
+        fun bind(data: UserProfile, onCLickListener: OnUserClickListener) {
+            binding.onClickListener = onCLickListener
             binding.data = data
             binding.executePendingBindings()
         }
@@ -38,5 +42,8 @@ class UsersAdapter(options: FirestoreRecyclerOptions<UserProfile>) :
         }
     }
 
+    class OnUserClickListener(private val onClickListener: (id: String) -> Unit) {
+        fun onClick(id: String) = onClickListener(id)
+    }
 }
 

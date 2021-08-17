@@ -39,6 +39,7 @@ android {
     buildFeatures {
         dataBinding true
     }
+
 }
 
 dependencies {
@@ -72,13 +73,14 @@ dependencies {
 
 
 
-    implementation 'com.google.dagger:hilt-android:2.38'
+    implementation 'com.google.dagger:hilt-android:2.38.1'
     implementation 'androidx.hilt:hilt-navigation-fragment:1.0.0'
-    kapt 'com.google.dagger:hilt-compiler:2.38'
+    kapt 'com.google.dagger:hilt-compiler:2.38.1'
     kapt 'com.google.dagger:dagger-android-processor:2.38'
 
     implementation 'pub.devrel:easypermissions:3.0.0'
 
+    implementation "io.grpc:grpc-okhttp:1.32.2"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

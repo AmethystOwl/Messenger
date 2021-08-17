@@ -19,24 +19,27 @@ import kotlinx.coroutines.InternalCoroutinesApi
 
 
 @AndroidEntryPoint
+@ExperimentalCoroutinesApi
 class HomeFragment : Fragment() {
     private val TAG = "HomeFragment"
     private val viewModel: HomeViewModel by viewModels()
     private lateinit var binding: HomeFragmentBinding
-    private lateinit var usersAdapter: UsersAdapter
+    private lateinit var searchAdapter: UsersAdapter
     private lateinit var messagesAdapter: MessagesAdapter
 
 
     override fun onStart() {
         super.onStart()
-        // messagesAdapter.startListening()
-        usersAdapter.startListening()
+        setupAdapters()
+
+        messagesAdapter.startListening()
+        searchAdapter.startListening()
     }
 
     override fun onStop() {
         super.onStop()
-        // messagesAdapter.stopListening()
-        usersAdapter.stopListening()
+        messagesAdapter.stopListening()
+        searchAdapter.stopListening()
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -48,22 +51,56 @@ class HomeFragment : Fragment() {
         binding = HomeFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
+        // TODO : add states to viewModel and observe : searchView state, search query etc..
 
-        setupAdapter()
 
-
-        viewModel.queryState.observe(viewLifecycleOwner) {
+        viewModel.messagesQueryState.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Loading -> {
                     // TODO : Show loading progressbar
-                    Log.i(TAG, "onCreateView: queue state : loading")
+                    Log.i(TAG, "onCreateView: message queue state : loading")
                 }
                 is DataState.Success -> {
-                    val filteredUserOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
+                    val messagesOptions = FirestoreRecyclerOptions.Builder<MessageModel>()
+                        .setQuery(it.data, MessageModel::class.java)
+                        .build()
+                    messagesAdapter.updateOptions(messagesOptions)
+
+                    messagesAdapter.notifyDataSetChanged()
+                    if (messagesAdapter.itemCount == 0) {
+                        binding.noMessagesTv.visibility = View.VISIBLE
+                    }
+                }
+                is DataState.Error -> {
+                    view?.showSnackbar(
+                        binding.coordinator,
+                        it.exception.message!!,
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
+                }
+                is DataState.Canceled -> {
+
+                }
+                else -> {
+
+                }
+            }
+        }
+        viewModel.usersQueryState.observe(viewLifecycleOwner) {
+            when (it) {
+                is DataState.Loading -> {
+                    // TODO : Show loading progressbar
+                    Log.i(TAG, "onCreateView: user queue state : loading")
+                }
+                is DataState.Success -> {
+                    val userOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
                         .setQuery(it.data, UserProfile::class.java)
                         .build()
-                    usersAdapter.updateOptions(filteredUserOptions)
-                    usersAdapter.notifyDataSetChanged()
+                    searchAdapter.updateOptions(userOptions)
+                    searchAdapter.notifyDataSetChanged()
+
 
                 }
                 is DataState.Error -> {
@@ -75,21 +112,77 @@ class HomeFragment : Fragment() {
                         null
                     )
                 }
+                is DataState.Canceled -> {
+
+                }
+                else -> {
+
+                }
             }
         }
+        viewModel.friendAdditionState.observe(viewLifecycleOwner) {
+            when (it) {
+                is DataState.Loading -> {
+                    // TODO : Show loading animation on button
+                }
+                is DataState.Success -> {
+                    view?.showSnackbar(
+                        binding.coordinator,
+                        "Friend Added",
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
 
+
+                }
+                is DataState.Canceled -> {
+                    view?.showSnackbar(
+                        binding.coordinator,
+                        "Operation canceled",
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
+                }
+                is DataState.Error -> {
+                    view?.showSnackbar(
+                        binding.coordinator,
+                        it.exception.message!!,
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
+                }
+
+            }
+        }
         setHasOptionsMenu(true)
         return binding.root
 
     }
 
-    private fun setupAdapter() {
-        val query = viewModel.getDefaultUserQuery()
-        val userOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
-            .setQuery(query, UserProfile::class.java)
+
+    private fun setupAdapters() {
+        val defaultUessageQuery = viewModel.getDefaultMessageQuery()
+        val defaultMessagesOptions = FirestoreRecyclerOptions.Builder<MessageModel>()
+            .setQuery(defaultUessageQuery, MessageModel::class.java)
             .build()
-        usersAdapter = UsersAdapter(userOptions)
-        binding.recyclerview.adapter = usersAdapter
+        messagesAdapter = MessagesAdapter(defaultMessagesOptions)
+        binding.messagesRecyclerview.adapter = messagesAdapter
+
+        val defaultUserQuery = viewModel.getDefaultUserQuery()
+        val defaultUserOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
+            .setQuery(defaultUserQuery, UserProfile::class.java)
+            .build()
+        searchAdapter = UsersAdapter(defaultUserOptions, onUserClickListener)
+
+
+        binding.searchRecyclerview.adapter = searchAdapter
+
+        if (messagesAdapter.itemCount == 0) {
+            binding.noMessagesTv.visibility = View.VISIBLE
+        }
     }
 
     @ExperimentalCoroutinesApi
@@ -98,31 +191,22 @@ class HomeFragment : Fragment() {
         inflater.inflate(R.menu.option_menu, menu)
         val onActionExpandListener = object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-                view?.showSnackbar(
-                    binding.coordinator,
-                    "Expanded",
-                    Snackbar.LENGTH_LONG,
-                    null,
-                    null
-                )
+                showSearchLayout(true)
                 return true
             }
 
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                view?.showSnackbar(
-                    binding.coordinator,
-                    "Collapsed",
-                    Snackbar.LENGTH_LONG,
-                    null,
-                    null
-                )
+                showSearchLayout(false)
                 return true
-
             }
 
         }
+
+        val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
+        searchView.onActionViewExpanded()
         menu.findItem(R.id.app_bar_search).setOnActionExpandListener(onActionExpandListener)
-        val searchQuery = object : SearchView.OnQueryTextListener {
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return true
             }
@@ -136,10 +220,10 @@ class HomeFragment : Fragment() {
                 return true
             }
 
-        }
-        val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
-        searchView.setOnQueryTextListener(searchQuery)
+        })
+
         searchView.queryHint = getString(R.string.search_hint)
+        super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -155,6 +239,26 @@ class HomeFragment : Fragment() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun showSearchLayout(bShow: Boolean) {
+        when (bShow) {
+            true -> {
+                binding.messagesRecyclerview.visibility = View.INVISIBLE
+                binding.noMessagesTv.visibility = View.INVISIBLE
+                binding.searchRecyclerview.visibility = View.VISIBLE
+            }
+            false -> {
+                binding.searchRecyclerview.visibility = View.INVISIBLE
+                binding.messagesRecyclerview.visibility = View.VISIBLE
+                binding.noMessagesTv.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    @ExperimentalCoroutinesApi
+    private val onUserClickListener = UsersAdapter.OnUserClickListener { email ->
+        viewModel.addFriendByEmail(email)
     }
 
 }

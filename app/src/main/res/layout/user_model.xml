@@ -6,6 +6,10 @@
     <data>
 
         <variable
+            name="onClickListener"
+            type="com.example.messenger.UsersAdapter.OnUserClickListener" />
+
+        <variable
             name="data"
             type="com.example.messenger.UserProfile" />
     </data>
@@ -20,12 +24,14 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackground">
+            android:background="?attr/selectableItemBackground"
+            app:layout_constraintBottom_toBottomOf="@+id/header_text_tv"
+            app:layout_constraintTop_toBottomOf="@+id/header_text_tv">
 
             <de.hdodenhof.circleimageview.CircleImageView
                 android:id="@+id/avatar_iv"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
@@ -34,14 +40,14 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:src="@tools:sample/avatars" />
+                tools:ignore="ImageContrastCheck"
+                tools:src="@drawable/avatar" />
 
             <TextView
                 android:id="@+id/header_text_tv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:layout_marginTop="5dp"
                 android:textColor="#000000"
                 android:textStyle="bold"
                 app:firstName="@{data.fname}"
@@ -62,7 +68,19 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/avatar_iv"
                 app:layout_constraintTop_toBottomOf="@+id/header_text_tv"
-                tools:text="Hey!" />
+                tools:text="Egypt" />
+
+            <ImageButton
+                android:id="@+id/imageView2"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="15dp"
+                android:contentDescription="@string/add_friend_icon"
+                android:onClick="@{() -> onClickListener.onClick(data.email)}"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_baseline_person_add" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

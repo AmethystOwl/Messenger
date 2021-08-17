@@ -58,6 +58,7 @@
     <string name="empty_conversation">Start the conversation by saying Hi!</string>
     <string name="start_chat">start Chat</string>
     <string name="add_a_friend_to_start_a_conversation">Add a friend to start a conversation</string>
+    <string name="add_friend_icon">Add Friend Icon</string>
     <string-array name="days">
         <item>1</item>
         <item>2</item>

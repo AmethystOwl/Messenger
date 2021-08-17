@@ -20,8 +20,8 @@ data class UserProfile(
     var status: String? = STATUS_ONLINE,
     var allowDirectMessaging: Boolean? = true,
     var isProfileCreationCompleted: Boolean? = false,
-    // TODO : Add friends list.. of uIds
-    var searchList: ArrayList<String>
+    var searchList: ArrayList<String>,
+    var friendsList: ArrayList<String>
 ) : Parcelable {
     constructor() : this(
         null,
@@ -37,7 +37,8 @@ data class UserProfile(
         null,
         null,
         null,
-        ArrayList()
+        searchList = ArrayList(),
+        friendsList = ArrayList()
     )
 
 }
