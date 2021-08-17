@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
@@ -338,12 +339,91 @@ class Repository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
     fun signOut() {
-
         auth.signOut()
     }
 
     fun getDefaultMessageQuery() =
         fireStore.collection(Constants.MESSAGE_COLLECTION).limit(15)
+
+
+    /*  @ExperimentalCoroutinesApi
+      suspend fun defaultFriendsQuery() = callbackFlow<DataState<ArrayList<UserProfile?>>> {
+          val friendlistArr = ArrayList<UserProfile?>()
+          offer(DataState.Loading)
+          if (auth.uid != null) {
+              fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!).get()
+                  .addOnCompleteListener {
+                      when {
+                          it.isSuccessful -> {
+                              val currentUser = it.result?.toObject(UserProfile::class.java)
+                              if (currentUser != null) {
+                                  val friendList = currentUser.friendsList
+                                  friendList.forEach { friend ->
+
+                                      fireStore.collection(Constants.USER_COLLECTION)
+                                          .document(friend)
+                                          .get().addOnCompleteListener { friendDocSnapShot ->
+                                              if (friendDocSnapShot.result?.exists()!!) {
+                                                  val friendProfile =
+                                                      friendDocSnapShot.result?.toObject(
+                                                          UserProfile::class.java
+                                                      )
+                                                  friendlistArr.add(friendProfile)
+
+                                              }
+                                          }
+
+                                  }
+
+                              }
+                          }
+
+                          it.isCanceled -> {
+                              offer(DataState.Canceled)
+
+                          }
+                          it.exception != null -> {
+                              offer(DataState.Error(it.exception!!))
+                          }
+                      }
+                  }
+          }
+          awaitClose {
+              offer(DataState.Success(friendlistArr))
+          }
+      }.flowOn(Dispatchers.IO)
+  */
+
+
+    @ExperimentalCoroutinesApi
+    suspend fun defaultFriendsQuery() = callbackFlow<DataState<List<UserProfile>>> {
+        if (auth.uid != null) {
+            fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!).get()
+                .addOnCompleteListener {
+                    when {
+                        it.isSuccessful -> {
+                            val currentUser = it.result?.toObject(UserProfile::class.java)
+                            if (currentUser != null) {
+                                val friendList = currentUser.friendsList
+                                fireStore.collection(Constants.USER_COLLECTION).whereIn(
+                                    FieldPath.documentId(),
+                                    friendList
+                                ).get().addOnCompleteListener {
+                                    val list = it.result?.toObjects(UserProfile::class.java)
+                                    offer(DataState.Success(list!!))
+                                }
+
+                            }
+                        }
+                        it.exception != null -> {
+                            offer(DataState.Error(it.exception!!))
+                        }
+                    }
+                }
+        }
+        awaitClose()
+    }.flowOn(Dispatchers.IO)
+
 
     suspend fun defaultMessageQuery() = flow<DataState<Query>> {
         emit(DataState.Loading)
@@ -360,6 +440,7 @@ class Repository @Inject constructor(
         fireStore.collection(Constants.USER_COLLECTION)
             .whereNotEqualTo(Constants.FIELD_EMAIL, auth.currentUser?.email)
             .orderBy(Constants.FIELD_EMAIL, Query.Direction.ASCENDING)
+
 
     suspend fun defaultUserQuery() = flow<DataState<Query>> {
         emit(DataState.Loading)
@@ -388,5 +469,37 @@ class Repository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
+/* fun idToProfile(ids: ArrayList<String>): ArrayList<UserProfile> {
+     val favoriteLatestNews: Flow<List<UserProfile>> = flow {
+         val items = ids
+
+     }
+
+
+ }*/
+
+/* @ExperimentalCoroutinesApi
+ suspend fun defaultFriendsQuery1() = callbackFlow<DataState<ArrayList<UserProfile>>> {
+     if (auth.uid != null) {
+         fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!).get()
+             .addOnCompleteListener {
+                 when {
+                     it.isSuccessful -> {
+                         val currentUser = it.result?.toObject(UserProfile::class.java)
+                         if (currentUser != null) {
+                             val friendList = currentUser.friendsList
+                             friendList.forEach {
+
+                             }
+                         }
+                     }
+                     it.exception != null -> {
+                         offer(DataState.Error(it.exception!!))
+                     }
+                 }
+             }
+     }
+     awaitClose()
+ }.flowOn(Dispatchers.IO)*/
 
 }

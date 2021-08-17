@@ -85,7 +85,7 @@ class CompleteProfileFragment : Fragment() {
             openExternalStorage()
         }
         binding.completeLaterButton.setOnClickListener {
-            findNavController().navigate(CompleteProfileFragmentDirections.actionCompleteProfileFragmentToHomeFragment())
+            findNavController().navigate(CompleteProfileFragmentDirections.actionCompleteProfileFragmentToChatsFragment())
         }
         binding.submitPictureBtn.setOnClickListener {
             if (profilePictureUrl != null && uid != null) {
@@ -118,7 +118,7 @@ class CompleteProfileFragment : Fragment() {
                     findNavController()
                         .navigate(
                             CompleteProfileFragmentDirections
-                                .actionCompleteProfileFragmentToHomeFragment()
+                                .actionCompleteProfileFragmentToChatsFragment()
                         )
                 }
 

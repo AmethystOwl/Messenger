@@ -1,4 +1,4 @@
-package com.example.messenger.home
+package com.example.messenger.chats
 
 import android.annotation.SuppressLint
 import android.os.Bundle
@@ -10,27 +10,31 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.messenger.*
 import com.example.messenger.Utils.Companion.showSnackbar
-import com.example.messenger.databinding.HomeFragmentBinding
+import com.example.messenger.databinding.ChatsFragmentBinding
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.InternalCoroutinesApi
 
 
 @AndroidEntryPoint
 @ExperimentalCoroutinesApi
-class HomeFragment : Fragment() {
+class ChatsFragment : Fragment() {
     private val TAG = "HomeFragment"
-    private val viewModel: HomeViewModel by viewModels()
-    private lateinit var binding: HomeFragmentBinding
+    private val sharedViewModel: SharedViewModel by viewModels()
+    private val chatsViewModel: ChatsViewModel by viewModels()
+
+    private lateinit var binding: ChatsFragmentBinding
     private lateinit var searchAdapter: UsersAdapter
     private lateinit var messagesAdapter: MessagesAdapter
+    private lateinit var mainActivity: MainActivity
 
 
     override fun onStart() {
         super.onStart()
         setupAdapters()
+        mainActivity = activity as MainActivity
+        mainActivity.binding.bottomNavView.visibility = View.VISIBLE
 
         messagesAdapter.startListening()
         searchAdapter.startListening()
@@ -38,6 +42,8 @@ class HomeFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
+        mainActivity.binding.bottomNavView.visibility = View.INVISIBLE
+
         messagesAdapter.stopListening()
         searchAdapter.stopListening()
     }
@@ -48,13 +54,16 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = HomeFragmentBinding.inflate(inflater, container, false)
-        binding.viewModel = viewModel
+        binding = ChatsFragmentBinding.inflate(inflater, container, false)
+        binding.viewModel = chatsViewModel
         binding.lifecycleOwner = viewLifecycleOwner
-        // TODO : add states to viewModel and observe : searchView state, search query etc..
-        // TODO : when friend added, remove add button, at startup remove add button for friends in search list.
+        // TODO : Change searchView to make it search Chats, not People, add another Fragment to
+        //        handle that
 
-        viewModel.messagesQueryState.observe(viewLifecycleOwner) {
+        // TODO : Network states :(
+        // TODO : Add States to viewModel and observe : searchView state, search query etc..
+        // TODO : When friend added, remove add button, at startup remove add button for friends in search list.
+        chatsViewModel.messagesQueryState.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Loading -> {
                     // TODO : Show loading progressbar
@@ -93,7 +102,7 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-        viewModel.usersQueryState.observe(viewLifecycleOwner) {
+        sharedViewModel.usersQueryState.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Loading -> {
                     // TODO : Show loading progressbar
@@ -131,7 +140,7 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-        viewModel.friendAdditionState.observe(viewLifecycleOwner) {
+        sharedViewModel.friendAdditionState.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Loading -> {
                     // TODO : Show loading animation on button
@@ -168,20 +177,21 @@ class HomeFragment : Fragment() {
             }
         }
         setHasOptionsMenu(true)
+
         return binding.root
 
     }
 
 
     private fun setupAdapters() {
-        val defaultUessageQuery = viewModel.getDefaultMessageQuery()
+        val defaultMessageQuery = chatsViewModel.getDefaultMessageQuery()
         val defaultMessagesOptions = FirestoreRecyclerOptions.Builder<MessageModel>()
-            .setQuery(defaultUessageQuery, MessageModel::class.java)
+            .setQuery(defaultMessageQuery, MessageModel::class.java)
             .build()
         messagesAdapter = MessagesAdapter(defaultMessagesOptions)
         binding.messagesRecyclerview.adapter = messagesAdapter
 
-        val defaultUserQuery = viewModel.getDefaultUserQuery()
+        val defaultUserQuery = sharedViewModel.getDefaultUserQuery()
         val defaultUserOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
             .setQuery(defaultUserQuery, UserProfile::class.java)
             .build()
@@ -195,56 +205,54 @@ class HomeFragment : Fragment() {
         }
     }
 
-    @ExperimentalCoroutinesApi
-    @InternalCoroutinesApi
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.option_menu, menu)
-        val onActionExpandListener = object : MenuItem.OnActionExpandListener {
-            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-                showSearchLayout(true)
-                return true
-            }
-
-            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                showSearchLayout(false)
-                return true
-            }
-
-        }
-
-        val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
-        searchView.onActionViewExpanded()
-        menu.findItem(R.id.app_bar_search).setOnActionExpandListener(onActionExpandListener)
-
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText.isNullOrBlank()) {
-                    viewModel.defaultUserQuery()
-                } else {
-                    viewModel.filterUserQuery(newText)
-                }
-                return true
-            }
-
-        })
-
-        searchView.queryHint = getString(R.string.search_hint)
-        super.onCreateOptionsMenu(menu, inflater)
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        menu.findItem(R.id.app_bar_search)?.isVisible = true
+        menu.findItem(R.id.sign_out_option)?.isVisible = true
+        super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.sign_out_option -> {
-                viewModel.signOut()
-                findNavController().navigate(HomeFragmentDirections.actionHomeFragmentToLoginFragment())
+                sharedViewModel.signOut()
+                findNavController().navigate(ChatsFragmentDirections.actionChatsFragmentToLoginFragment())
                 super.onOptionsItemSelected(item)
             }
             R.id.app_bar_search -> {
+                val onActionExpandListener = object : MenuItem.OnActionExpandListener {
+                    override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                        showSearchLayout(true)
+                        return true
+                    }
 
+                    override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                        showSearchLayout(false)
+                        return true
+                    }
+
+                }
+
+                val searchView = item.actionView as SearchView
+                searchView.onActionViewExpanded()
+                item.setOnActionExpandListener(onActionExpandListener)
+
+                searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                    override fun onQueryTextSubmit(query: String?): Boolean {
+                        return true
+                    }
+
+                    override fun onQueryTextChange(newText: String?): Boolean {
+                        if (newText.isNullOrBlank()) {
+                            sharedViewModel.defaultUserQuery()
+                        } else {
+                            sharedViewModel.filterUserQuery(newText)
+                        }
+                        return true
+                    }
+
+                })
+
+                searchView.queryHint = getString(R.string.search_hint)
                 super.onOptionsItemSelected(item)
             }
             else -> super.onOptionsItemSelected(item)
@@ -268,7 +276,7 @@ class HomeFragment : Fragment() {
 
     @ExperimentalCoroutinesApi
     private val onUserClickListener = UsersAdapter.OnUserClickListener { email ->
-        viewModel.addFriendByEmail(email)
+        sharedViewModel.addFriendByEmail(email)
     }
 
 }

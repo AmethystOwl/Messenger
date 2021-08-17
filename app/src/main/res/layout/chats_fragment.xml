@@ -7,7 +7,7 @@
 
         <variable
             name="viewModel"
-            type="com.example.messenger.home.HomeViewModel" />
+            type="com.example.messenger.chats.ChatsViewModel" />
     </data>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -17,9 +17,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-
             android:layout_height="match_parent"
-            tools:context=".home.HomeFragment">
+            tools:context=".chats.ChatsFragment">
 
             <TextView
                 android:id="@+id/no_messages_tv"
@@ -42,8 +41,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-
-                tools:listitem="@layout/message_model" />
+                tools:listitem="@layout/user_model" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/messages_recyclerview"
@@ -57,14 +55,6 @@
                 app:layout_constraintTop_toTopOf="parent"
                 tools:listitem="@layout/message_model" />
 
-
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottom_navigation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:menu="@menu/navigation_menu" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>

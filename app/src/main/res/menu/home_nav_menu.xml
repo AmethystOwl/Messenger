@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/chats_menu_item"
+        android:id="@+id/chatsFragment"
         android:icon="@drawable/ic_start_chat_foreground"
         android:title="@string/chats" />
     <item
-        android:id="@+id/people_menu_item"
+        android:id="@+id/friendsFragment"
         android:icon="@drawable/ic_baseline_person_outline_24"
         android:title="@string/people" />
 </menu>

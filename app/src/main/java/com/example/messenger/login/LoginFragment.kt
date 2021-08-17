@@ -43,7 +43,7 @@ class LoginFragment @Inject constructor() : Fragment() {
 
         viewModel.refreshCurrentUser()
         if (viewModel.currentUser.value != null) {
-            findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToHomeFragment())
+            findNavController().navigate(LoginFragmentDirections.actionLoginFragmentToChatsFragment())
         }
 
         binding.registerButton.setOnClickListener {
@@ -82,7 +82,7 @@ class LoginFragment @Inject constructor() : Fragment() {
                         findNavController()
                             .navigate(
                                 LoginFragmentDirections
-                                    .actionLoginFragmentToHomeFragment()
+                                    .actionLoginFragmentToChatsFragment()
                             )
                     }
                 }

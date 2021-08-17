@@ -3,8 +3,12 @@ package com.example.messenger
 import android.Manifest
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
 import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
@@ -16,13 +20,23 @@ import pub.devrel.easypermissions.EasyPermissions
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
     EasyPermissions.RationaleCallbacks {
-    private lateinit var binding: ActivityMainBinding
+    lateinit var binding: ActivityMainBinding
     private val TAG = "MainActivity"
 
     // TODO : Add option menu & search button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+
+        // TODO : save things in local db...
+        setupBottomNavMenu(navController)
+    }
+
+    private fun setupBottomNavMenu(navController: NavController) {
+        binding.bottomNavView.setupWithNavController(navController)
     }
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
@@ -65,5 +79,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
 
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.option_menu, menu)
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.findItem(R.id.app_bar_search)?.isVisible = false
+        menu?.findItem(R.id.sign_out_option)?.isVisible = false
+
+        return super.onPrepareOptionsMenu(menu)
+    }
 
 }

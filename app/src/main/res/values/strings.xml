@@ -228,4 +228,9 @@
         <item>2020</item>
         <item>2021</item>
     </string-array>
+    <string name="title_activity_home">HomeActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_activity_main_activity2aaaaaaa">MainActivity2aaaaaaa</string>
 </resources>

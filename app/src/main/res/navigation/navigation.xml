@@ -10,8 +10,8 @@
         android:label="LoginFragment"
         tools:layout="@layout/login_fragment">
         <action
-            android:id="@+id/action_loginFragment_to_homeFragment"
-            app:destination="@id/homeFragment"
+            android:id="@+id/action_loginFragment_to_chatsFragment"
+            app:destination="@id/chatsFragment"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="false" />
         <action
@@ -22,6 +22,7 @@
         <action
             android:id="@+id/action_loginFragment_to_completeProfileFragment"
             app:destination="@id/completeProfileFragment" />
+
 
     </fragment>
     <fragment
@@ -34,13 +35,18 @@
             app:destination="@id/emailVerificationFragment" />
     </fragment>
     <fragment
-        android:id="@+id/homeFragment"
-        android:name="com.example.messenger.home.HomeFragment"
-        android:label="home_fragment"
-        tools:layout="@layout/home_fragment">
+        android:id="@+id/chatsFragment"
+        android:name="com.example.messenger.chats.ChatsFragment"
+        android:label="chats_fragment"
+        tools:layout="@layout/chats_fragment">
         <action
-            android:id="@+id/action_homeFragment_to_loginFragment"
-            app:destination="@id/loginFragment" />
+            android:id="@+id/action_chatsFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_chatsFragment_to_friendsFragment"
+            app:destination="@id/friendsFragment" />
 
 
     </fragment>
@@ -62,7 +68,19 @@
         android:label="complete_profile_fragment"
         tools:layout="@layout/complete_profile_fragment">
         <action
-            android:id="@+id/action_completeProfileFragment_to_homeFragment"
-            app:destination="@id/homeFragment" />
+            android:id="@+id/action_completeProfileFragment_to_chatsFragment"
+            app:destination="@id/chatsFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="false" />
     </fragment>
+    <fragment
+        android:id="@+id/friendsFragment"
+        android:name="com.example.messenger.friends.FriendsFragment"
+        android:label="FriendsFragment"
+        tools:layout="@layout/friends_fragment">
+        <action
+            android:id="@+id/action_friendsFragment_to_chatsFragment"
+            app:destination="@id/chatsFragment" />
+    </fragment>
+
 </navigation>
