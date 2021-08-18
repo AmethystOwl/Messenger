@@ -52,7 +52,7 @@ class HomeFragment : Fragment() {
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
         // TODO : add states to viewModel and observe : searchView state, search query etc..
-
+        // TODO : when friend added, remove add button, at startup remove add button for friends in search list.
 
         viewModel.messagesQueryState.observe(viewLifecycleOwner) {
             when (it) {
@@ -65,7 +65,6 @@ class HomeFragment : Fragment() {
                         .setQuery(it.data, MessageModel::class.java)
                         .build()
                     messagesAdapter.updateOptions(messagesOptions)
-
                     messagesAdapter.notifyDataSetChanged()
                     if (messagesAdapter.itemCount == 0) {
                         binding.noMessagesTv.visibility = View.VISIBLE
@@ -81,7 +80,13 @@ class HomeFragment : Fragment() {
                     )
                 }
                 is DataState.Canceled -> {
-
+                    view?.showSnackbar(
+                        binding.coordinator,
+                        "Operation Canceled",
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
                 }
                 else -> {
 
@@ -113,7 +118,13 @@ class HomeFragment : Fragment() {
                     )
                 }
                 is DataState.Canceled -> {
-
+                    view?.showSnackbar(
+                        binding.coordinator,
+                        "Operation Canceled",
+                        Snackbar.LENGTH_LONG,
+                        null,
+                        null
+                    )
                 }
                 else -> {
 
@@ -133,7 +144,6 @@ class HomeFragment : Fragment() {
                         null,
                         null
                     )
-
 
                 }
                 is DataState.Canceled -> {
