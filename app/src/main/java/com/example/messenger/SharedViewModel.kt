@@ -20,6 +20,9 @@ class SharedViewModel @Inject constructor(private val repo: Repository) : ViewMo
     private var _friendAdditionState = MutableLiveData<DataState<Int>>()
     val friendAdditionState: LiveData<DataState<Int>> get() = _friendAdditionState
 
+    private var _friendUidState = MutableLiveData<DataState<String>>()
+    val friendUidState: LiveData<DataState<String>> get() = _friendUidState
+
     fun signOut() = repo.signOut()
 
 
@@ -51,9 +54,25 @@ class SharedViewModel @Inject constructor(private val repo: Repository) : ViewMo
             repo.addToFriendList(Constants.USER_COLLECTION, email).collect {
                 _friendAdditionState.value = it
             }
-
         }
+
     }
 
+    fun getDocRef(collectionName: String, documentName: String) =
+        repo.getDocRef(collectionName, documentName)
 
+    @ExperimentalCoroutinesApi
+    fun uIdByEmail(friendEmail: String) {
+        viewModelScope.launch {
+            repo.uIdByEmail(friendEmail).collect {
+                _friendUidState.value = it
+            }
+
+        }
+
+    }
+
+    fun onDoneNavigatingToChatsFragment() {
+        _friendUidState.value = DataState.Empty
+    }
 }

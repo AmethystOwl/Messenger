@@ -26,7 +26,7 @@ class FriendsViewModel @Inject constructor(private val repo: Repository) : ViewM
         getFriendList()
     }
 
-    private fun getFriendList() =
+    fun getFriendList() =
         viewModelScope.launch {
             repo.defaultFriendsQuery().collect {
                 _friendsList.value = it

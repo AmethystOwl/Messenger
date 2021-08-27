@@ -76,7 +76,7 @@ class LoginViewModel @Inject constructor(private val repo: Repository) : ViewMod
             if (currentUser.value != null) {
                 val uId = currentUser.value?.uid
                 if (uId != null) {
-                    repo.getCurrentUserProfile(uId).collect {
+                    repo.userProfileByUId(uId).collect {
                         _currentUserProfile.value = it
 
                     }

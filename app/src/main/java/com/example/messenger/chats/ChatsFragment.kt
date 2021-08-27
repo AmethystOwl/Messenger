@@ -196,8 +196,6 @@ class ChatsFragment : Fragment() {
             .setQuery(defaultUserQuery, UserProfile::class.java)
             .build()
         searchAdapter = UsersAdapter(defaultUserOptions, onUserClickListener)
-
-
         binding.searchRecyclerview.adapter = searchAdapter
 
         if (messagesAdapter.itemCount == 0) {

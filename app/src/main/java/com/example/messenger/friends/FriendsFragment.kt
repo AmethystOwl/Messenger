@@ -37,12 +37,13 @@ class FriendsFragment : Fragment() {
 
         mainActivity = activity as MainActivity
         mainActivity.binding.bottomNavView.visibility = View.VISIBLE
+        searchAdapter.startListening()
     }
 
     override fun onStop() {
         super.onStop()
         mainActivity.binding.bottomNavView.visibility = View.INVISIBLE
-
+        searchAdapter.stopListening()
     }
 
 
@@ -166,8 +167,26 @@ class FriendsFragment : Fragment() {
 
             }
         }
+        sharedViewModel.friendUidState.observe(viewLifecycleOwner) {
+            when (it) {
+                is DataState.Loading -> {
 
+                }
+                is DataState.Success -> {
+                    findNavController().navigate(
+                        FriendsFragmentDirections
+                            .actionFriendsFragmentToChatFragment(it.data)
+                    )
+                    sharedViewModel.onDoneNavigatingToChatsFragment()
+                }
+                is DataState.Canceled -> {
 
+                }
+                is DataState.Error -> {
+
+                }
+            }
+        }
 
         setHasOptionsMenu(true)
         return binding.root
@@ -264,12 +283,16 @@ class FriendsFragment : Fragment() {
     }
 
     @ExperimentalCoroutinesApi
-    val onFriendClickListener = FriendsAdapter.OnUserClickListener {
-        // TODO : create chat fragment, from uid(or email) to friend uid(or email)
+    val onFriendClickListener = FriendsAdapter.OnUserClickListener { friendEmail ->
+        sharedViewModel.uIdByEmail(friendEmail)
+
     }
 
     @ExperimentalCoroutinesApi
     val onUserClickListener = UsersAdapter.OnUserClickListener {
-        sharedViewModel.filterUserQuery(it)
+        sharedViewModel.addFriendByEmail(it)
+        friendsViewModel.getFriendList()
     }
+
+
 }

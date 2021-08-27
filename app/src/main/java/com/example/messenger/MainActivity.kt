@@ -8,6 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.databinding.ActivityMainBinding
@@ -22,6 +24,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
     EasyPermissions.RationaleCallbacks {
     lateinit var binding: ActivityMainBinding
     private val TAG = "MainActivity"
+    private lateinit var navController: NavController
 
     // TODO : Add option menu & search button
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,10 +32,25 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
+        setSupportActionBar(binding.toolbar)
+
+        val appBarConfiguration = AppBarConfiguration(
+            setOf(
+                R.id.loginFragment, R.id.registerFragment, R.id.chatsFragment, R.id.friendsFragment
+            )
+        )
+        /*      NavigationUI.setupActionBarWithNavController(
+                  this,
+                  navController,
+                  appBarConfiguration
+              )*/
+        setupActionBarWithNavController(navController, appBarConfiguration)
 
         // TODO : save things in local db...
         setupBottomNavMenu(navController)
+
+
     }
 
     private fun setupBottomNavMenu(navController: NavController) {
@@ -81,7 +99,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.option_menu, menu)
-
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -92,4 +109,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
         return super.onPrepareOptionsMenu(menu)
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        return navController.navigateUp() || super.onSupportNavigateUp()
+    }
 }

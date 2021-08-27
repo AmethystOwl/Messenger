@@ -137,7 +137,7 @@ class Repository @Inject constructor(
 
 
     @ExperimentalCoroutinesApi
-    suspend fun getCurrentUserProfile(uId: String) = callbackFlow<DataState<UserProfile?>> {
+    suspend fun userProfileByUId(uId: String) = callbackFlow<DataState<UserProfile?>> {
         fireStore.collection(Constants.USER_COLLECTION).document(uId).get()
             .addOnCompleteListener { documentSnapshot ->
                 offer(DataState.Loading)
@@ -194,68 +194,76 @@ class Repository @Inject constructor(
                                     if (documentSnapshot.exists()) {
                                         val uId = documentSnapshot.id
                                         val currentUserId = auth.currentUser?.uid!!
+
                                         fireStore.collection(Constants.USER_COLLECTION)
                                             .document(currentUserId).get()
                                             .addOnCompleteListener { currentUserDocSnapShot ->
+
                                                 when {
                                                     currentUserDocSnapShot.isSuccessful -> {
                                                         val currentUserProfile =
                                                             currentUserDocSnapShot.result?.toObject(
                                                                 UserProfile::class.java
                                                             )
+
                                                         if (currentUserProfile != null) {
-                                                            currentUserDocSnapShot.result?.reference?.update(
-                                                                Constants.FIELD_FRIENDS_COUNT,
-                                                                currentUserProfile.friendsCount?.plus(
-                                                                    1
+                                                            if (!currentUserProfile.friendsList.contains(
+                                                                    uId
                                                                 )
-                                                            )
-                                                                ?.addOnCompleteListener { friendsCountTask ->
-                                                                    when {
-                                                                        friendsCountTask.isSuccessful -> {
-                                                                            currentUserProfile.friendsList.add(
-                                                                                uId
-                                                                            )
-                                                                            currentUserDocSnapShot.result?.reference?.update(
-                                                                                Constants.FIELD_FRIENDS_LIST,
-                                                                                currentUserProfile.friendsList
-                                                                            )
-                                                                                ?.addOnCompleteListener { friendsListTask ->
-                                                                                    when {
-                                                                                        friendsListTask.isSuccessful -> {
-                                                                                            offer(
-                                                                                                DataState.Success(
-                                                                                                    Constants.FRIEND_ADDITION_SUCCESS
+                                                            ) {
+                                                                currentUserDocSnapShot.result?.reference?.update(
+                                                                    Constants.FIELD_FRIENDS_COUNT,
+                                                                    currentUserProfile.friendsCount?.plus(
+                                                                        1
+                                                                    )
+                                                                )
+                                                                    ?.addOnCompleteListener { friendsCountTask ->
+                                                                        when {
+                                                                            friendsCountTask.isSuccessful -> {
+                                                                                currentUserProfile.friendsList.add(
+                                                                                    uId
+                                                                                )
+                                                                                currentUserDocSnapShot.result?.reference?.update(
+                                                                                    Constants.FIELD_FRIENDS_LIST,
+                                                                                    currentUserProfile.friendsList
+                                                                                )
+                                                                                    ?.addOnCompleteListener { friendsListTask ->
+                                                                                        when {
+                                                                                            friendsListTask.isSuccessful -> {
+                                                                                                offer(
+                                                                                                    DataState.Success(
+                                                                                                        Constants.FRIEND_ADDITION_SUCCESS
+                                                                                                    )
                                                                                                 )
-                                                                                            )
-                                                                                        }
-                                                                                        friendsListTask.isCanceled -> {
-                                                                                            offer(
-                                                                                                DataState.Canceled
-                                                                                            )
-                                                                                        }
-                                                                                        friendsListTask.exception != null -> {
-                                                                                            offer(
-                                                                                                DataState.Error(
-                                                                                                    friendsCountTask.exception!!
+                                                                                            }
+                                                                                            friendsListTask.isCanceled -> {
+                                                                                                offer(
+                                                                                                    DataState.Canceled
                                                                                                 )
-                                                                                            )
+                                                                                            }
+                                                                                            friendsListTask.exception != null -> {
+                                                                                                offer(
+                                                                                                    DataState.Error(
+                                                                                                        friendsCountTask.exception!!
+                                                                                                    )
+                                                                                                )
+                                                                                            }
                                                                                         }
                                                                                     }
-                                                                                }
-                                                                        }
-                                                                        friendsCountTask.isCanceled -> {
-                                                                            offer(DataState.Canceled)
-                                                                        }
-                                                                        friendsCountTask.exception != null -> {
-                                                                            offer(
-                                                                                DataState.Error(
-                                                                                    friendsCountTask.exception!!
+                                                                            }
+                                                                            friendsCountTask.isCanceled -> {
+                                                                                offer(DataState.Canceled)
+                                                                            }
+                                                                            friendsCountTask.exception != null -> {
+                                                                                offer(
+                                                                                    DataState.Error(
+                                                                                        friendsCountTask.exception!!
+                                                                                    )
                                                                                 )
-                                                                            )
+                                                                            }
                                                                         }
                                                                     }
-                                                                }
+                                                            }
                                                         }
                                                     }
                                                     currentUserDocSnapShot.isCanceled -> {
@@ -405,14 +413,15 @@ class Repository @Inject constructor(
                             val currentUser = it.result?.toObject(UserProfile::class.java)
                             if (currentUser != null) {
                                 val friendList = currentUser.friendsList
-                                fireStore.collection(Constants.USER_COLLECTION).whereIn(
-                                    FieldPath.documentId(),
-                                    friendList
-                                ).get().addOnCompleteListener {
-                                    val list = it.result?.toObjects(UserProfile::class.java)
-                                    offer(DataState.Success(list!!))
+                                if (friendList.size > 0) {
+                                    fireStore.collection(Constants.USER_COLLECTION).whereIn(
+                                        FieldPath.documentId(),
+                                        friendList
+                                    ).get().addOnCompleteListener {
+                                        val list = it.result?.toObjects(UserProfile::class.java)
+                                        offer(DataState.Success(list!!))
+                                    }
                                 }
-
                             }
                         }
                         it.exception != null -> {
@@ -469,37 +478,32 @@ class Repository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-/* fun idToProfile(ids: ArrayList<String>): ArrayList<UserProfile> {
-     val favoriteLatestNews: Flow<List<UserProfile>> = flow {
-         val items = ids
+    @ExperimentalCoroutinesApi
+    suspend fun uIdByEmail(email: String) = callbackFlow<DataState<String>> {
+        offer(DataState.Loading)
+        fireStore.collection(Constants.USER_COLLECTION)
+            .whereEqualTo(Constants.FIELD_EMAIL, email)
+            .get()
+            .addOnCompleteListener {
+                when {
+                    it.isSuccessful -> {
+                        if (it.result?.size() == 1) {
+                            it.result?.documents?.forEach { documentSnapshot ->
+                                offer(DataState.Success(documentSnapshot.id))
+                            }
+                        }
+                    }
+                    it.isCanceled -> {
+                        offer(DataState.Canceled)
+                    }
+                    it.exception != null -> {
+                        offer(DataState.Error(it.exception!!))
+                    }
+                }
 
-     }
 
-
- }*/
-
-/* @ExperimentalCoroutinesApi
- suspend fun defaultFriendsQuery1() = callbackFlow<DataState<ArrayList<UserProfile>>> {
-     if (auth.uid != null) {
-         fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!).get()
-             .addOnCompleteListener {
-                 when {
-                     it.isSuccessful -> {
-                         val currentUser = it.result?.toObject(UserProfile::class.java)
-                         if (currentUser != null) {
-                             val friendList = currentUser.friendsList
-                             friendList.forEach {
-
-                             }
-                         }
-                     }
-                     it.exception != null -> {
-                         offer(DataState.Error(it.exception!!))
-                     }
-                 }
-             }
-     }
-     awaitClose()
- }.flowOn(Dispatchers.IO)*/
+            }
+        awaitClose()
+    }.flowOn(Dispatchers.IO)
 
 }

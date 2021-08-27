@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+
+        <variable
+            name="viewModel"
+            type="com.example.messenger.chat.ChatViewModel" />
+    </data>
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".chat.ChatFragment">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_anchor="@+id/constraintLayout"
+            app:layout_anchorGravity="center">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/relativeLayout"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="#DADBDC"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/friendPictureImageView"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="16dp"
+                    app:bindImage="@{viewModel.friendUserData.profilePictureUrl}"
+
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="ImageContrastCheck"
+                    tools:src="@drawable/avatar" />
+
+                <TextView
+                    android:id="@+id/friendNameTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginTop="10dp"
+                    android:maxWidth="500dp"
+                    android:maxLength="30"
+                    android:textColor="#000000"
+                    android:textStyle="bold"
+                    app:firstName="@{viewModel.friendUserData.fname}"
+                    app:lastName="@{viewModel.friendUserData.lname}"
+                    app:layout_constraintEnd_toStartOf="@id/infoImageButton"
+                    app:layout_constraintStart_toEndOf="@id/friendPictureImageView"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="RelativeOverlap"
+                    tools:text="Your friend" />
+
+                <TextView
+                    android:id="@+id/friendStatusTextView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="13dp"
+                    android:textColor="#455A64"
+                    app:bindCountry="@{viewModel.friendUserData.status}"
+                    app:layout_constraintEnd_toStartOf="@id/infoImageButton"
+                    app:layout_constraintStart_toEndOf="@id/friendPictureImageView"
+                    app:layout_constraintTop_toBottomOf="@id/friendNameTextView"
+                    tools:text="Online" />
+
+                <ImageButton
+                    android:id="@+id/infoImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="#00FFFFFF"
+                    android:contentDescription="@string/option"
+                    android:minHeight="48dp"
+                    android:src="@drawable/ic_baseline_info_24"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="SpeakableTextPresentCheck" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/chatRecyclerview"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toTopOf="@id/selectImageButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
+
+            <ImageButton
+                android:id="@+id/selectImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#00112233"
+                android:contentDescription="@string/select_image_to_send"
+                android:src="@drawable/ic_baseline_photo_library_48"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/chatRecyclerview" />
+
+            <EditText
+                android:id="@+id/sendTextEditText"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:hint="@string/type_a_message"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine"
+                android:textColorHint="#757575"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/sendImageButton"
+                app:layout_constraintStart_toEndOf="@id/selectImageButton"
+                app:layout_constraintTop_toBottomOf="@id/chatRecyclerview" />
+
+            <ImageButton
+                android:id="@+id/sendImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#00112233"
+                android:contentDescription="@string/send_message"
+                android:src="@drawable/ic_baseline_send_48"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/sendTextEditText"
+                app:layout_constraintTop_toBottomOf="@id/chatRecyclerview" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+</layout>

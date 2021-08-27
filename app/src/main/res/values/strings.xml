@@ -233,4 +233,9 @@
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_activity_main_activity2aaaaaaa">MainActivity2aaaaaaa</string>
+    <string name="option">option</string>
+    <string name="select_image_to_send">select Image to send</string>
+    <string name="type_a_message">Type a message</string>
+    <string name="send_message">send message</string>
+    <string name="sender_user_icon">Sender User Icon</string>
 </resources>
