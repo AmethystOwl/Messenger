@@ -7,21 +7,21 @@ import com.example.messenger.databinding.MessageModelBinding
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 
-class MessagesAdapter(options: FirestoreRecyclerOptions<MessageModel>) :
-    FirestoreRecyclerAdapter<MessageModel, MessagesAdapter.ChatModelViewHolder>(options) {
+class MessagesAdapter(options: FirestoreRecyclerOptions<Message>) :
+    FirestoreRecyclerAdapter<Message, MessagesAdapter.ChatModelViewHolder>(options) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChatModelViewHolder {
         return ChatModelViewHolder.from(parent)
     }
 
 
-    override fun onBindViewHolder(holder: ChatModelViewHolder, position: Int, model: MessageModel) {
+    override fun onBindViewHolder(holder: ChatModelViewHolder, position: Int, model: Message) {
         holder.bind(model)
     }
 
     class ChatModelViewHolder(private val binding: MessageModelBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(data: MessageModel) {
+        fun bind(data: Message) {
             binding.data = data
             binding.executePendingBindings()
         }

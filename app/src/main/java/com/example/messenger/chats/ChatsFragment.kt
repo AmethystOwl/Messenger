@@ -49,7 +49,7 @@ class ChatsFragment : Fragment() {
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    @ExperimentalCoroutinesApi
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -70,8 +70,8 @@ class ChatsFragment : Fragment() {
                     Log.i(TAG, "onCreateView: message queue state : loading")
                 }
                 is DataState.Success -> {
-                    val messagesOptions = FirestoreRecyclerOptions.Builder<MessageModel>()
-                        .setQuery(it.data, MessageModel::class.java)
+                    val messagesOptions = FirestoreRecyclerOptions.Builder<Message>()
+                        .setQuery(it.data, Message::class.java)
                         .build()
                     messagesAdapter.updateOptions(messagesOptions)
                     messagesAdapter.notifyDataSetChanged()
@@ -185,8 +185,8 @@ class ChatsFragment : Fragment() {
 
     private fun setupAdapters() {
         val defaultMessageQuery = chatsViewModel.getDefaultMessageQuery()
-        val defaultMessagesOptions = FirestoreRecyclerOptions.Builder<MessageModel>()
-            .setQuery(defaultMessageQuery, MessageModel::class.java)
+        val defaultMessagesOptions = FirestoreRecyclerOptions.Builder<Message>()
+            .setQuery(defaultMessageQuery, Message::class.java)
             .build()
         messagesAdapter = MessagesAdapter(defaultMessagesOptions)
         binding.messagesRecyclerview.adapter = messagesAdapter

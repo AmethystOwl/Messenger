@@ -1,6 +1,6 @@
 package com.example.messenger
 
-data class MessageModel(
+data class Message(
     val headerText: String,
     val bodyText: String?,
     val pictureUrl: String?,

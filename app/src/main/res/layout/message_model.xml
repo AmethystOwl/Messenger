@@ -7,7 +7,7 @@
 
         <variable
             name="data"
-            type="com.example.messenger.MessageModel" />
+            type="com.example.messenger.Message" />
     </data>
 
     <androidx.cardview.widget.CardView
