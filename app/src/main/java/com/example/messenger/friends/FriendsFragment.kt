@@ -8,10 +8,16 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.example.messenger.*
+import com.example.messenger.DataState
+import com.example.messenger.MainActivity
+import com.example.messenger.R
+import com.example.messenger.SharedViewModel
 import com.example.messenger.Utils.Companion.showSnackbar
+import com.example.messenger.adapter.FriendsAdapter
+import com.example.messenger.adapter.UsersAdapter
 import com.example.messenger.chats.ChatsFragmentDirections
 import com.example.messenger.databinding.FriendsFragmentBinding
+import com.example.messenger.model.UserProfile
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint

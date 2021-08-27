@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import com.example.messenger.*
 import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.databinding.RegisterFragmentBinding
+import com.example.messenger.model.UserProfile
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.messenger.Constants
 import com.example.messenger.DataState
 import com.example.messenger.Repository
-import com.example.messenger.UserProfile
+import com.example.messenger.model.UserProfile
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi

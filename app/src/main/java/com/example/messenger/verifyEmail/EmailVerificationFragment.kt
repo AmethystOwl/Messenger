@@ -11,9 +11,9 @@ import androidx.navigation.fragment.findNavController
 import com.example.messenger.Constants
 import com.example.messenger.DataState
 import com.example.messenger.R
-import com.example.messenger.UserProfile
 import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.databinding.EmailVerificationFragmentBinding
+import com.example.messenger.model.UserProfile
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.firestore.DocumentReference
 import dagger.hilt.android.AndroidEntryPoint

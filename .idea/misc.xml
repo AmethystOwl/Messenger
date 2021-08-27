@@ -37,7 +37,7 @@
         <entry key="app/src/main/res/layout/receive_from_model.xml" value="0.25" />
         <entry key="app/src/main/res/layout/register_fragment.xml" value="0.33" />
         <entry key="app/src/main/res/layout/send_to_model.xml" value="0.25" />
-        <entry key="app/src/main/res/layout/user_model.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/user_model.xml" value="0.1" />
         <entry key="app/src/main/res/menu/home_nav_menu.xml" value="0.19010416666666666" />
         <entry key="app/src/main/res/menu/navigation_menu.xml" value="0.34479166666666666" />
         <entry key="app/src/main/res/menu/option_menu.xml" value="0.1" />

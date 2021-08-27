@@ -57,7 +57,7 @@
         tools:layout="@layout/email_verification_fragment">
         <argument
             android:name="user"
-            app:argType="com.example.messenger.UserProfile" />
+            app:argType="com.example.messenger.model.UserProfile" />
         <action
             android:id="@+id/action_emailVerificationFragment_to_completeProfileFragment"
             app:destination="@id/completeProfileFragment" />

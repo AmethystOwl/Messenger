@@ -2,6 +2,7 @@ package com.example.messenger
 
 import android.net.Uri
 import android.util.Log
+import com.example.messenger.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException

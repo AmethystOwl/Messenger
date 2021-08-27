@@ -7,11 +7,11 @@
 
         <variable
             name="onClickListener"
-            type="com.example.messenger.UsersAdapter.OnUserClickListener" />
+            type="com.example.messenger.adapter.UsersAdapter.OnUserClickListener" />
 
         <variable
             name="data"
-            type="com.example.messenger.UserProfile" />
+            type="com.example.messenger.model.UserProfile" />
     </data>
 
     <androidx.cardview.widget.CardView

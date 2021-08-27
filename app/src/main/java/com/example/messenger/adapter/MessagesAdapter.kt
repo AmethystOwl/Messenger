@@ -1,9 +1,10 @@
-package com.example.messenger
+package com.example.messenger.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.messenger.databinding.MessageModelBinding
+import com.example.messenger.model.Message
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 

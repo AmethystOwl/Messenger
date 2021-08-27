@@ -1,4 +1,4 @@
-package com.example.messenger
+package com.example.messenger.model
 
 data class Message(
     val headerText: String,

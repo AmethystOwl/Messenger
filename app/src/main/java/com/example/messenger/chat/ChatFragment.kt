@@ -8,8 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.messenger.DataState
 import com.example.messenger.MainActivity
-import com.example.messenger.UserProfile
 import com.example.messenger.databinding.ChatFragmentBinding
+import com.example.messenger.model.UserProfile
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
