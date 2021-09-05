@@ -13,10 +13,8 @@ import com.example.messenger.MainActivity
 import com.example.messenger.R
 import com.example.messenger.SharedViewModel
 import com.example.messenger.Utils.Companion.showSnackbar
-import com.example.messenger.adapter.MessagesAdapter
 import com.example.messenger.adapter.UsersAdapter
 import com.example.messenger.databinding.ChatsFragmentBinding
-import com.example.messenger.model.Message
 import com.example.messenger.model.UserProfile
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.google.android.material.snackbar.Snackbar
@@ -33,7 +31,8 @@ class ChatsFragment : Fragment() {
 
     private lateinit var binding: ChatsFragmentBinding
     private lateinit var searchAdapter: UsersAdapter
-    private lateinit var messagesAdapter: MessagesAdapter
+
+    // private lateinit var conversationAdapter: ConversationAdapter
     private lateinit var mainActivity: MainActivity
 
 
@@ -43,7 +42,7 @@ class ChatsFragment : Fragment() {
         mainActivity = activity as MainActivity
         mainActivity.binding.bottomNavView.visibility = View.VISIBLE
 
-        messagesAdapter.startListening()
+        //  conversationAdapter.startListening()
         searchAdapter.startListening()
     }
 
@@ -51,7 +50,7 @@ class ChatsFragment : Fragment() {
         super.onStop()
         mainActivity.binding.bottomNavView.visibility = View.INVISIBLE
 
-        messagesAdapter.stopListening()
+        //  conversationAdapter.stopListening()
         searchAdapter.stopListening()
     }
 
@@ -77,14 +76,14 @@ class ChatsFragment : Fragment() {
                     Log.i(TAG, "onCreateView: message queue state : loading")
                 }
                 is DataState.Success -> {
-                    val messagesOptions = FirestoreRecyclerOptions.Builder<Message>()
-                        .setQuery(it.data, Message::class.java)
-                        .build()
-                    messagesAdapter.updateOptions(messagesOptions)
-                    messagesAdapter.notifyDataSetChanged()
-                    if (messagesAdapter.itemCount == 0) {
-                        binding.noMessagesTv.visibility = View.VISIBLE
-                    }
+                    //  val messagesOptions = FirestoreRecyclerOptions.Builder<Conversation>()
+                    //     .setQuery(it.data, Conversation::class.java)
+                    //     .build()
+                    //   conversationAdapter.updateOptions(messagesOptions)
+                    // conversationAdapter.notifyDataSetChanged()
+                    // if (conversationAdapter.itemCount == 0) {
+                    //     binding.noMessagesTv.visibility = View.VISIBLE
+                    // }
                 }
                 is DataState.Error -> {
                     view?.showSnackbar(
@@ -191,13 +190,13 @@ class ChatsFragment : Fragment() {
 
 
     private fun setupAdapters() {
-        val defaultMessageQuery = chatsViewModel.getDefaultMessageQuery()
-        val defaultMessagesOptions = FirestoreRecyclerOptions.Builder<Message>()
-            .setQuery(defaultMessageQuery, Message::class.java)
-            .build()
-        messagesAdapter = MessagesAdapter(defaultMessagesOptions)
-        binding.messagesRecyclerview.adapter = messagesAdapter
-
+        /* val defaultMessageQuery = chatsViewModel.getDefaultMessageQuery()
+         val defaultMessagesOptions = FirestoreRecyclerOptions.Builder<Conversation>()
+             .setQuery(defaultMessageQuery, Conversation::class.java)
+             .build()
+         conversationAdapter = ConversationAdapter(defaultMessagesOptions)
+         binding.messagesRecyclerview.adapter = conversationAdapter
+ */
         val defaultUserQuery = sharedViewModel.getDefaultUserQuery()
         val defaultUserOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
             .setQuery(defaultUserQuery, UserProfile::class.java)
@@ -205,9 +204,9 @@ class ChatsFragment : Fragment() {
         searchAdapter = UsersAdapter(defaultUserOptions, onUserClickListener)
         binding.searchRecyclerview.adapter = searchAdapter
 
-        if (messagesAdapter.itemCount == 0) {
-            binding.noMessagesTv.visibility = View.VISIBLE
-        }
+        /* if (conversationAdapter.itemCount == 0) {
+             binding.noMessagesTv.visibility = View.VISIBLE
+         }*/
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {

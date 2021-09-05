@@ -1,75 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginTop="16dp">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <TextView
-        android:id="@+id/senderMessageDate"
-        android:layout_width="wrap_content"
+    <data>
+
+        <variable
+            name="onMessageClickListener"
+            type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
+
+        <variable
+            name="data"
+            type="com.example.messenger.model.Message" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:paddingStart="8dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="4dp"
-        android:textColor="#C0C0C0"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="June 10" />
+        android:background="@color/black"
+        android:paddingTop="10dp"
 
-    <ImageView
-        android:id="@+id/senderProfilePicture"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="16dp"
-        android:contentDescription="@string/sender_user_icon"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/senderMessageDate"
-        tools:src="@drawable/avatar" />
-
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/senderCardView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="#D0D0D3"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="0dp"
-        app:cardPreventCornerOverlap="false"
-        app:cardUseCompatPadding="true"
-        app:layout_constraintStart_toEndOf="@+id/senderProfilePicture"
-        app:layout_constraintTop_toBottomOf="@+id/senderMessageDate">
-
+        android:paddingBottom="10dp"
+        tools:ignore="UselessParent">
 
         <TextView
-            android:id="@+id/SenderMessageTexView"
+            android:id="@+id/dateTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:getDateFromTimeStamp="@{data.timestamp}"
+            tools:text="12 Apr 2021" />
+
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/senderProfilePicture"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_below="@id/dateTextView"
+            android:layout_marginStart="5dp"
+            android:contentDescription="@string/sender_user_icon"
+            app:bindImage="@{data.profilePictureUrl}"
+            tools:ignore="ImageContrastCheck"
+            tools:src="@drawable/avatar" />
+
+
+        <LinearLayout
+            android:id="@id/linearLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:maxWidth="260dp"
-            android:paddingLeft="12dp"
-            android:paddingTop="8dp"
-            android:paddingRight="12dp"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            tools:text="Message" />
+            android:layout_below="@id/dateTextView"
+            android:layout_marginStart="2dp"
+            android:layout_marginTop="10dp"
+            android:layout_toEndOf="@id/senderProfilePicture">
 
-    </androidx.cardview.widget.CardView>
+            <androidx.cardview.widget.CardView
+                android:id="@+id/messageCardView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+
+                android:clickable="true"
+                android:focusable="true"
+                android:minHeight="40dp"
+                android:onClick="@{() -> onMessageClickListener.onClick(data)}"
+                app:cardBackgroundColor="#45434A"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardPreventCornerOverlap="false"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:id="@+id/linearLayout"
+
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:id="@+id/imageMessageImageView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="start"
+                        android:contentDescription="@string/image_message"
+                        android:maxWidth="260dp"
+                        app:bindImageMessage="@{data.imageMessageUrl}"
+                        tools:src="@drawable/ic_avatar_foreground" />
+
+                    <TextView
+                        android:id="@+id/messageTextView"
+                        bindMessage="@{data.message}"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:maxWidth="260dp"
+                        android:paddingLeft="12dp"
+
+                        android:paddingTop="8dp"
+                        android:paddingRight="12dp"
+                        android:textColor="#ffffff"
+                        android:textSize="16sp"
+
+                        tools:text="This is a Message" />
+                </LinearLayout>
 
 
-    <TextView
-        android:id="@+id/senderMessageTimestamp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="@+id/senderCardView"
-        app:layout_constraintStart_toEndOf="@+id/senderCardView"
-        tools:text="8:00" />
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
 
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/messageTimeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@id/linearLayout"
+            android:layout_toEndOf="@id/linearLayout"
+            android:textColor="#ffffff"
+            android:textSize="12sp"
+            app:getTimeFromTimeStamp="@{data.timestamp}"
+            tools:text="10:00 AM" />
+    </RelativeLayout>
+</layout>

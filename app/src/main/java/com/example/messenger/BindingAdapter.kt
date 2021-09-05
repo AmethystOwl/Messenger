@@ -1,7 +1,9 @@
 package com.example.messenger
 
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 
@@ -68,6 +70,57 @@ class BindingAdapter {
             }
         }
 
+
+        @JvmStatic
+        @BindingAdapter("bindImageMessage")
+        fun ImageView.bindImageMessage(uri: String?) {
+            uri?.let {
+                Glide.with(context)
+                    .load(uri)
+                    .override(1024, 1024)
+                    .into(this)
+            }
+
+        }
+
+        @JvmStatic
+        @BindingAdapter("textCardViewVisibility")
+        fun CardView.textCardViewVisibility(text: String?) {
+            visibility = if (text.isNullOrBlank() || text.isNullOrEmpty()) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+        }
+
+        @JvmStatic
+        @BindingAdapter("imageCardViewVisibility")
+        fun CardView.imageCardViewVisibility(imageUrl: String?) {
+            visibility = if (imageUrl.isNullOrBlank() || imageUrl.isNullOrEmpty()) {
+                View.GONE
+            } else {
+                View.VISIBLE
+
+            }
+        }
+
+        @JvmStatic
+        @BindingAdapter("setMessageStatus")
+        fun ImageView.setMessageStatus(status: Boolean) {
+            when (status) {
+                true -> {
+                    Glide.with(context)
+                        .load(R.drawable.ic_baseline_check_circle_outline_white_15)
+                        .into(this)
+                }
+                false -> {
+                    Glide.with(context)
+                        .load(R.drawable.ic_baseline_access_time_white_15)
+                        .into(this)
+                }
+            }
+        }
+
         @JvmStatic
         @BindingAdapter("bindHeader")
         fun TextView.bindHeader(textString: String?) {
@@ -92,6 +145,30 @@ class BindingAdapter {
         fun TextView.bindDate(textString: String?) {
             text = textString ?: "Undefined"
         }
+
+
+        @JvmStatic
+        @BindingAdapter("getDateFromTimeStamp")
+        fun TextView.getDateFromTimeStamp(timeStamp: Long) {
+            text = Utils.getDateStringFromTimeStamp(timeStamp)
+        }
+
+
+        @JvmStatic
+        @BindingAdapter("getTimeFromTimeStamp")
+        fun TextView.getTimeFromTimeStamp(timeStamp: Long) {
+            text = Utils.getTimeStringFromTimeStamp(timeStamp)
+        }
+
+        @JvmStatic
+        @BindingAdapter("bindMessage")
+        fun TextView.bindMessage(message: String?) {
+            message?.let {
+                text = message
+            }
+
+        }
     }
 }
+
 

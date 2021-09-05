@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.messenger.model.UserProfile
 import com.google.firebase.firestore.Query
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@ExperimentalCoroutinesApi
 class SharedViewModel @Inject constructor(private val repo: Repository) : ViewModel() {
 
     private var _usersQueryState = MutableLiveData<DataState<Query>>()
@@ -19,6 +21,9 @@ class SharedViewModel @Inject constructor(private val repo: Repository) : ViewMo
 
     private var _friendAdditionState = MutableLiveData<DataState<Int>>()
     val friendAdditionState: LiveData<DataState<Int>> get() = _friendAdditionState
+
+    private var _currentUserProfileState = MutableLiveData<DataState<UserProfile?>>()
+    val currentUserProfileState: LiveData<DataState<UserProfile?>> get() = _currentUserProfileState
 
     private var _friendUidState = MutableLiveData<DataState<String>>()
     val friendUidState: LiveData<DataState<String>> get() = _friendUidState
@@ -37,7 +42,6 @@ class SharedViewModel @Inject constructor(private val repo: Repository) : ViewMo
     fun getDefaultUserQuery() =
         repo.getDefaultUserQuery()
 
-    @ExperimentalCoroutinesApi
     fun filterUserQuery(name: String?) {
         if (!name.isNullOrEmpty()) {
             viewModelScope.launch {
@@ -48,7 +52,6 @@ class SharedViewModel @Inject constructor(private val repo: Repository) : ViewMo
         }
     }
 
-    @ExperimentalCoroutinesApi
     fun addFriendByEmail(email: String) {
         viewModelScope.launch {
             repo.addToFriendList(Constants.USER_COLLECTION, email).collect {
@@ -72,7 +75,21 @@ class SharedViewModel @Inject constructor(private val repo: Repository) : ViewMo
 
     }
 
+    fun getCurrentUser() =
+        repo.getCurrentUser()
+
+    fun getCurrentUserProfile() {
+        viewModelScope.launch {
+            repo.userProfileByUId(repo.getAuth().currentUser?.uid!!).collect {
+                _currentUserProfileState.value = it
+            }
+
+        }
+    }
+
     fun onDoneNavigatingToChatsFragment() {
         _friendUidState.value = DataState.Empty
     }
+
+    fun getDefaultMessageQuery(friendUid: String): Query = repo.getDefaultMessageQuery(friendUid)
 }

@@ -53,7 +53,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:listitem="@layout/message_model" />
+                tools:listitem="@layout/conversation_model" />
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,6 +2,7 @@ package com.example.messenger
 
 import android.net.Uri
 import android.util.Log
+import com.example.messenger.model.Message
 import com.example.messenger.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
 class Repository @Inject constructor(
     private val auth: FirebaseAuth,
     private val fireStore: FirebaseFirestore,
@@ -27,10 +29,9 @@ class Repository @Inject constructor(
     private val TAG = "Repository"
 
 
-    @ExperimentalCoroutinesApi
     suspend fun register(userProfile: UserProfile, password: String) =
         callbackFlow<DataState<UserProfile>?> {
-            offer(DataState.Loading)
+            trySend(DataState.Loading)
             auth.createUserWithEmailAndPassword(userProfile.email!!, password)
                 .addOnCompleteListener {
                     if (it.isComplete) {
@@ -67,28 +68,28 @@ class Repository @Inject constructor(
                                     when {
                                         docTask.isSuccessful -> {
                                             Log.i(TAG, "register doc: isSuccessful")
-                                            offer(DataState.Success(userProfile))
+                                            trySend(DataState.Success(userProfile))
 
                                         }
                                         docTask.isCanceled -> {
                                             Log.i(TAG, "register doc: isCanceled")
-                                            offer(DataState.Canceled)
+                                            trySend(DataState.Canceled)
 
                                         }
                                         docTask.exception != null -> {
                                             Log.i(TAG, "register doc: exception")
-                                            offer(DataState.Error(it.exception!!))
+                                            trySend(DataState.Error(it.exception!!))
                                         }
                                     }
                                 }
                             }
                             it.isCanceled -> {
                                 Log.i(TAG, "register: isCanceled")
-                                offer(DataState.Canceled)
+                                trySend(DataState.Canceled)
                             }
                             it.exception != null -> {
                                 Log.i(TAG, "register: exception")
-                                offer(DataState.Error(it.exception!!))
+                                trySend(DataState.Error(it.exception!!))
                             }
                         }
                     }
@@ -102,30 +103,29 @@ class Repository @Inject constructor(
         return auth.currentUser
     }
 
-    @ExperimentalCoroutinesApi
     suspend fun login(email: String, password: String) = callbackFlow<DataState<Int>> {
-        offer(DataState.Loading)
+        trySend(DataState.Loading)
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { signInTask ->
             when {
                 signInTask.isSuccessful -> {
-                    offer(DataState.Success(Constants.LOGIN_SUCCESSFUL))
+                    trySend(DataState.Success(Constants.LOGIN_SUCCESSFUL))
                 }
                 signInTask.isCanceled -> {
-                    offer(DataState.Canceled)
+                    trySend(DataState.Canceled)
 
                 }
                 signInTask.exception != null -> {
                     when (signInTask.exception) {
                         is FirebaseAuthInvalidCredentialsException -> {
-                            offer(DataState.Invalid(Constants.LOGIN_INVALID_CREDENTIALS))
+                            trySend(DataState.Invalid(Constants.LOGIN_INVALID_CREDENTIALS))
 
                         }
                         is FirebaseAuthInvalidUserException -> {
-                            offer(DataState.Invalid(Constants.LOGIN_NO_USER))
+                            trySend(DataState.Invalid(Constants.LOGIN_NO_USER))
 
                         }
                         else -> {
-                            offer(DataState.Error(signInTask.exception!!))
+                            trySend(DataState.Error(signInTask.exception!!))
                         }
                     }
                 }
@@ -137,21 +137,20 @@ class Repository @Inject constructor(
     }.flowOn(Dispatchers.IO)
 
 
-    @ExperimentalCoroutinesApi
     suspend fun userProfileByUId(uId: String) = callbackFlow<DataState<UserProfile?>> {
         fireStore.collection(Constants.USER_COLLECTION).document(uId).get()
             .addOnCompleteListener { documentSnapshot ->
-                offer(DataState.Loading)
+                trySend(DataState.Loading)
                 when {
                     documentSnapshot.isSuccessful -> {
                         val profile = documentSnapshot.result?.toObject(UserProfile::class.java)
-                        offer(DataState.Success(profile))
+                        trySend(DataState.Success(profile))
                     }
                     documentSnapshot.isCanceled -> {
-                        offer(DataState.Canceled)
+                        trySend(DataState.Canceled)
                     }
                     documentSnapshot.exception != null -> {
-                        offer(DataState.Error(documentSnapshot.exception!!))
+                        trySend(DataState.Error(documentSnapshot.exception!!))
                     }
                 }
             }
@@ -160,16 +159,15 @@ class Repository @Inject constructor(
 
     fun getAuth() = auth
 
-    @ExperimentalCoroutinesApi
     suspend fun sendVerificationEmail(currentUser: FirebaseUser?) = callbackFlow<DataState<Int>> {
         currentUser?.let {
             currentUser.sendEmailVerification().addOnCompleteListener {
                 when {
                     it.isSuccessful -> {
-                        offer(DataState.Success(Constants.VERIFICATION_EMAIL_SENT_SUCCESS))
+                        trySend(DataState.Success(Constants.VERIFICATION_EMAIL_SENT_SUCCESS))
                     }
                     it.exception != null -> {
-                        offer(DataState.Error(it.exception!!))
+                        trySend(DataState.Error(it.exception!!))
                     }
                 }
             }
@@ -181,7 +179,6 @@ class Repository @Inject constructor(
         fireStore.collection(collectionName).document(documentName)
 
 
-    @ExperimentalCoroutinesApi
     suspend fun addToFriendList(collectionName: String, email: String) =
         callbackFlow<DataState<Int>> {
             fireStore.collection(collectionName)
@@ -231,19 +228,19 @@ class Repository @Inject constructor(
                                                                                     ?.addOnCompleteListener { friendsListTask ->
                                                                                         when {
                                                                                             friendsListTask.isSuccessful -> {
-                                                                                                offer(
+                                                                                                trySend(
                                                                                                     DataState.Success(
                                                                                                         Constants.FRIEND_ADDITION_SUCCESS
                                                                                                     )
                                                                                                 )
                                                                                             }
                                                                                             friendsListTask.isCanceled -> {
-                                                                                                offer(
+                                                                                                trySend(
                                                                                                     DataState.Canceled
                                                                                                 )
                                                                                             }
                                                                                             friendsListTask.exception != null -> {
-                                                                                                offer(
+                                                                                                trySend(
                                                                                                     DataState.Error(
                                                                                                         friendsCountTask.exception!!
                                                                                                     )
@@ -253,10 +250,10 @@ class Repository @Inject constructor(
                                                                                     }
                                                                             }
                                                                             friendsCountTask.isCanceled -> {
-                                                                                offer(DataState.Canceled)
+                                                                                trySend(DataState.Canceled)
                                                                             }
                                                                             friendsCountTask.exception != null -> {
-                                                                                offer(
+                                                                                trySend(
                                                                                     DataState.Error(
                                                                                         friendsCountTask.exception!!
                                                                                     )
@@ -268,25 +265,29 @@ class Repository @Inject constructor(
                                                         }
                                                     }
                                                     currentUserDocSnapShot.isCanceled -> {
-                                                        offer(DataState.Canceled)
+                                                        trySend(DataState.Canceled)
                                                     }
                                                     currentUserDocSnapShot.exception != null -> {
-                                                        offer(DataState.Error(currentUserDocSnapShot.exception!!))
+                                                        trySend(
+                                                            DataState.Error(
+                                                                currentUserDocSnapShot.exception!!
+                                                            )
+                                                        )
                                                     }
                                                 }
                                             }
                                     } else {
-                                        offer(DataState.Empty)
+                                        trySend(DataState.Empty)
                                     }
                                 }
                             }
 
                         }
                         task.isCanceled -> {
-                            offer(DataState.Canceled)
+                            trySend(DataState.Canceled)
                         }
                         task.exception != null -> {
-                            offer(DataState.Error(task.exception!!))
+                            trySend(DataState.Error(task.exception!!))
 
                         }
 
@@ -296,14 +297,13 @@ class Repository @Inject constructor(
         }.flowOn(Dispatchers.IO)
 
 
-    @ExperimentalCoroutinesApi
     suspend fun uploadImg(uri: Uri, uId: String) = callbackFlow<DataState<Int>> {
-        offer(DataState.Loading)
+        trySend(DataState.Loading)
         val fileRef =
             storage.reference.child(Constants.STORAGE_PROFILE_PICTURE_FOLDER).child(uId)
         val uploadTask = fileRef.putFile(uri)
         uploadTask.addOnProgressListener {
-            offer(DataState.Loading)
+            trySend(DataState.Loading)
         }
         uploadTask.continueWithTask { task ->
             if (!task.isSuccessful) {
@@ -328,20 +328,20 @@ class Repository @Inject constructor(
                                 Constants.FIELD_PROFILE_CREATION_COMPLETED,
                                 true
                             )
-                            offer(DataState.Success(Constants.IMAGE_UPLOAD_SUCCESSFUL))
+                            trySend(DataState.Success(Constants.IMAGE_UPLOAD_SUCCESSFUL))
                         }
                     } else if (downloadUri.isCanceled) {
-                        offer(DataState.Canceled)
+                        trySend(DataState.Canceled)
                     } else if (downloadUri.exception != null) {
-                        offer(DataState.Error(downloadUri.exception!!))
+                        trySend(DataState.Error(downloadUri.exception!!))
                     }
 
                 }
 
             } else if (task.isCanceled) {
-                offer(DataState.Canceled)
+                trySend(DataState.Canceled)
             } else if (task.exception != null) {
-                offer(DataState.Error(task.exception!!))
+                trySend(DataState.Error(task.exception!!))
             }
         }
         awaitClose()
@@ -351,60 +351,15 @@ class Repository @Inject constructor(
         auth.signOut()
     }
 
-    fun getDefaultMessageQuery() =
-        fireStore.collection(Constants.MESSAGE_COLLECTION).limit(15)
+    fun getDefaultMessageQuery(friendUid: String) =
+        fireStore.collection(Constants.USER_COLLECTION)
+            .document(auth.currentUser?.uid!!)
+            .collection(Constants.USER_INBOX_COLLECTION)
+            .document(friendUid)
+            .collection(Constants.USER_CONVERSATION_COLLECTION)
+            .orderBy(Constants.FIELD_TIMESTAMP, Query.Direction.DESCENDING)
 
 
-    /*  @ExperimentalCoroutinesApi
-      suspend fun defaultFriendsQuery() = callbackFlow<DataState<ArrayList<UserProfile?>>> {
-          val friendlistArr = ArrayList<UserProfile?>()
-          offer(DataState.Loading)
-          if (auth.uid != null) {
-              fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!).get()
-                  .addOnCompleteListener {
-                      when {
-                          it.isSuccessful -> {
-                              val currentUser = it.result?.toObject(UserProfile::class.java)
-                              if (currentUser != null) {
-                                  val friendList = currentUser.friendsList
-                                  friendList.forEach { friend ->
-
-                                      fireStore.collection(Constants.USER_COLLECTION)
-                                          .document(friend)
-                                          .get().addOnCompleteListener { friendDocSnapShot ->
-                                              if (friendDocSnapShot.result?.exists()!!) {
-                                                  val friendProfile =
-                                                      friendDocSnapShot.result?.toObject(
-                                                          UserProfile::class.java
-                                                      )
-                                                  friendlistArr.add(friendProfile)
-
-                                              }
-                                          }
-
-                                  }
-
-                              }
-                          }
-
-                          it.isCanceled -> {
-                              offer(DataState.Canceled)
-
-                          }
-                          it.exception != null -> {
-                              offer(DataState.Error(it.exception!!))
-                          }
-                      }
-                  }
-          }
-          awaitClose {
-              offer(DataState.Success(friendlistArr))
-          }
-      }.flowOn(Dispatchers.IO)
-  */
-
-
-    @ExperimentalCoroutinesApi
     suspend fun defaultFriendsQuery() = callbackFlow<DataState<List<UserProfile>>> {
         if (auth.uid != null) {
             fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!).get()
@@ -420,13 +375,13 @@ class Repository @Inject constructor(
                                         friendList
                                     ).get().addOnCompleteListener {
                                         val list = it.result?.toObjects(UserProfile::class.java)
-                                        offer(DataState.Success(list!!))
+                                        trySend(DataState.Success(list!!))
                                     }
                                 }
                             }
                         }
                         it.exception != null -> {
-                            offer(DataState.Error(it.exception!!))
+                            trySend(DataState.Error(it.exception!!))
                         }
                     }
                 }
@@ -479,9 +434,8 @@ class Repository @Inject constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    @ExperimentalCoroutinesApi
     suspend fun uIdByEmail(email: String) = callbackFlow<DataState<String>> {
-        offer(DataState.Loading)
+        trySend(DataState.Loading)
         fireStore.collection(Constants.USER_COLLECTION)
             .whereEqualTo(Constants.FIELD_EMAIL, email)
             .get()
@@ -490,15 +444,15 @@ class Repository @Inject constructor(
                     it.isSuccessful -> {
                         if (it.result?.size() == 1) {
                             it.result?.documents?.forEach { documentSnapshot ->
-                                offer(DataState.Success(documentSnapshot.id))
+                                trySend(DataState.Success(documentSnapshot.id))
                             }
                         }
                     }
                     it.isCanceled -> {
-                        offer(DataState.Canceled)
+                        trySend(DataState.Canceled)
                     }
                     it.exception != null -> {
-                        offer(DataState.Error(it.exception!!))
+                        trySend(DataState.Error(it.exception!!))
                     }
                 }
 
@@ -506,5 +460,128 @@ class Repository @Inject constructor(
             }
         awaitClose()
     }.flowOn(Dispatchers.IO)
+
+    suspend fun sendMessage(message: Message, toUid: String) =
+
+        callbackFlow<DataState<Message>> {
+            trySend(DataState.Loading)
+            val myUid = auth.currentUser?.uid
+            if (myUid != null) {
+                getDocRef(Constants.USER_COLLECTION, myUid)
+                    .collection(Constants.USER_INBOX_COLLECTION)
+                    .document(toUid)
+                    .collection(Constants.USER_CONVERSATION_COLLECTION)
+                    .document()
+                    .set(message)
+                    .addOnCompleteListener { myInboxTask ->
+                        when {
+                            myInboxTask.isSuccessful -> {
+                                getDocRef(Constants.USER_COLLECTION, toUid)
+                                    .collection(Constants.USER_INBOX_COLLECTION)
+                                    .document(myUid)
+                                    .collection(Constants.USER_CONVERSATION_COLLECTION)
+                                    .document()
+                                    .set(message)
+                                    .addOnCompleteListener { friendInboxTask ->
+                                        when {
+                                            friendInboxTask.isSuccessful -> {
+                                                trySend(DataState.Success(message))
+                                            }
+                                            friendInboxTask.isCanceled -> {
+                                                trySend(DataState.Canceled)
+
+                                            }
+                                            friendInboxTask.exception != null -> {
+                                                trySend(DataState.Error(friendInboxTask.exception!!))
+                                            }
+                                        }
+                                    }
+
+                            }
+                            myInboxTask.isCanceled -> {
+                                trySend(DataState.Canceled)
+
+                            }
+                            myInboxTask.exception != null -> {
+                                trySend(DataState.Error(myInboxTask.exception!!))
+                            }
+                        }
+                    }.addOnFailureListener { sendMessageException ->
+                        trySend(DataState.Error(sendMessageException))
+                    }.addOnCanceledListener {
+                        trySend(DataState.Canceled)
+                    }
+            }
+            awaitClose()
+        }.flowOn(Dispatchers.IO)
+
+    // TODO : set document, upload image, then set url to document
+    fun sendImage(data: Message, imageUri: Uri, friendUid: String) = callbackFlow<DataState<Int>> {
+        trySend(DataState.Loading)
+        val fileNameRandom = System.currentTimeMillis().toString()
+        if (auth.uid != null) {
+            val fileRef = storage.getReference(Constants.STORAGE_CHAT_UPLOADS_FOLDER)
+                .child(auth.uid!!)
+                .child(friendUid)
+                .child(fileNameRandom)
+            fileRef.putFile(imageUri).addOnProgressListener {
+                val progress = (100.0 * it.bytesTransferred) / it.totalByteCount
+                Log.i(TAG, "sendImage: ${progress.toInt()}")
+                trySend(DataState.Progress(progress.toInt()))
+            }.continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let {
+                        trySend(DataState.Error(it))
+                    }
+                }
+                fileRef.downloadUrl
+            }.addOnCompleteListener {
+                when {
+                    it.isSuccessful -> {
+                        val downloadUri = it.result
+                        if (downloadUri != null) {
+                            data.imageMessageUrl = downloadUri.toString()
+                            getDocRef(Constants.USER_COLLECTION, auth.uid!!)
+                                .collection(Constants.USER_INBOX_COLLECTION)
+                                .document(friendUid)
+                                .collection(Constants.USER_CONVERSATION_COLLECTION)
+                                .document()
+                                .set(data)
+                                .addOnCompleteListener { myInboxTask ->
+                                    when {
+                                        myInboxTask.isSuccessful -> {
+                                            getDocRef(Constants.USER_COLLECTION, friendUid)
+                                                .collection(Constants.USER_INBOX_COLLECTION)
+                                                .document(auth.uid!!)
+                                                .collection(Constants.USER_CONVERSATION_COLLECTION)
+                                                .document()
+                                                .set(data)
+                                                .addOnCompleteListener { friendInboxTask ->
+                                                    when {
+                                                        friendInboxTask.isSuccessful -> {
+                                                            // TODO : separate upload task from document, when upload finishes, set url
+                                                            trySend(DataState.Success(Constants.IMAGE_MESSAGE_SUCCESS))
+                                                        }
+                                                        it.isCanceled -> {
+                                                            trySend(DataState.Canceled)
+                                                        }
+                                                        it.exception != null -> {
+                                                            trySend(DataState.Error(it.exception!!))
+                                                        }
+                                                    }
+                                                }
+
+                                        }
+                                    }
+
+                                }
+                        }
+                    }
+                }
+            }
+            awaitClose()
+        }
+    }.flowOn(Dispatchers.IO)
+
 
 }
