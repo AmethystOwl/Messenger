@@ -15,7 +15,6 @@ import com.example.messenger.SharedViewModel
 import com.example.messenger.Utils.Companion.showSnackbar
 import com.example.messenger.adapter.FriendsAdapter
 import com.example.messenger.adapter.UsersAdapter
-import com.example.messenger.chats.ChatsFragmentDirections
 import com.example.messenger.databinding.FriendsFragmentBinding
 import com.example.messenger.model.UserProfile
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
@@ -209,7 +208,7 @@ class FriendsFragment : Fragment() {
         return when (item.itemId) {
             R.id.sign_out_option -> {
                 sharedViewModel.signOut()
-                findNavController().navigate(ChatsFragmentDirections.actionChatsFragmentToLoginFragment())
+                findNavController().navigate(FriendsFragmentDirections.actionFriendsFragmentToLoginFragment())
                 super.onOptionsItemSelected(item)
             }
             R.id.app_bar_search -> {

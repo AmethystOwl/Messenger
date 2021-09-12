@@ -30,7 +30,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:contentDescription="@string/chat_avatar"
-                app:bindImage="@{data.pictureUrl}"
+                app:bindChatProfilePicture="@{data.pictureUrl}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"

@@ -50,51 +50,36 @@
         <RelativeLayout
             android:id="@+id/relativeLayout"
             android:layout_width="wrap_content"
-            android:layout_marginEnd="10dp"
             android:layout_height="wrap_content"
             android:layout_below="@id/dateTextView"
-            android:layout_alignParentEnd="true">
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp">
 
             <androidx.cardview.widget.CardView
-                android:id="@+id/messageCardView"
+                android:id="@+id/imageCardView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
-                android:minHeight="48dp"
-                android:onClick="@{() -> onMessageClickListener.onClick(data,view)}"
-                app:cardBackgroundColor="#774df2"
+                android:onClick="@{() -> onImageClickListener.onClick(data,view)}"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
                 app:cardUseCompatPadding="true">
 
-                <LinearLayout
-                    android:id="@+id/linearLayout"
+                <ImageView
+                    android:id="@+id/imageMessageImageView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
-                    android:gravity="end"
-                    android:orientation="vertical">
-
-
-                    <TextView
-                        android:id="@+id/messageTextView"
-                        bindMessage="@{data.message}"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:maxWidth="260dp"
-                        android:paddingLeft="12dp"
-                        android:paddingTop="8dp"
-                        android:paddingRight="12dp"
-                        android:textColor="#ffffff"
-                        android:textSize="16sp"
-                        tools:text="This is a Message" />
-                </LinearLayout>
+                    android:contentDescription="@string/image_message"
+                    android:maxWidth="260dp"
+                    app:bindImageMessage="@{data.imageMessageUrl}"
+                    tools:src="@drawable/ic_avatar_foreground" />
             </androidx.cardview.widget.CardView>
 
+
         </RelativeLayout>
+
+
         <TextView
             android:id="@+id/messageTimeTextView"
             android:layout_width="wrap_content"

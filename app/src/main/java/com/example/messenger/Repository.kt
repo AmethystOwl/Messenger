@@ -28,7 +28,7 @@ class Repository @Inject constructor(
 ) {
     private val TAG = "Repository"
 
-
+    // TODO : use close function
     suspend fun register(userProfile: UserProfile, password: String) =
         callbackFlow<DataState<UserProfile>?> {
             trySend(DataState.Loading)
@@ -79,6 +79,7 @@ class Repository @Inject constructor(
                                         docTask.exception != null -> {
                                             Log.i(TAG, "register doc: exception")
                                             trySend(DataState.Error(it.exception!!))
+
                                         }
                                     }
                                 }

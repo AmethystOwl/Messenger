@@ -7,11 +7,12 @@
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.messenger.login.LoginFragment"
-        android:label="LoginFragment"
+        android:label="Login"
         tools:layout="@layout/login_fragment">
         <action
             android:id="@+id/action_loginFragment_to_chatsFragment"
             app:destination="@id/chatsFragment"
+            app:launchSingleTop="false"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="false" />
         <action
@@ -28,7 +29,7 @@
     <fragment
         android:id="@+id/registerFragment"
         android:name="com.example.messenger.register.RegisterFragment"
-        android:label="RegisterFragment"
+        android:label="Register"
         tools:layout="@layout/register_fragment">
         <action
             android:id="@+id/action_registerFragment_to_verifyEmailFragment"
@@ -37,23 +38,25 @@
     <fragment
         android:id="@+id/chatsFragment"
         android:name="com.example.messenger.chats.ChatsFragment"
-        android:label="chats_fragment"
+        android:label="Chats"
         tools:layout="@layout/chats_fragment">
         <action
             android:id="@+id/action_chatsFragment_to_loginFragment"
             app:destination="@id/loginFragment"
+            app:launchSingleTop="false"
             app:popUpTo="@id/loginFragment"
-            app:popUpToInclusive="false" />
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_chatsFragment_to_friendsFragment"
             app:destination="@id/friendsFragment" />
+
 
 
     </fragment>
     <fragment
         android:id="@+id/emailVerificationFragment"
         android:name="com.example.messenger.verifyEmail.EmailVerificationFragment"
-        android:label="EmailVerificationFragment"
+        android:label="Email Verification"
         tools:layout="@layout/email_verification_fragment">
         <argument
             android:name="user"
@@ -65,7 +68,7 @@
     <fragment
         android:id="@+id/completeProfileFragment"
         android:name="com.example.messenger.completeProfile.CompleteProfileFragment"
-        android:label="complete_profile_fragment"
+        android:label="Complete your profile"
         tools:layout="@layout/complete_profile_fragment">
         <action
             android:id="@+id/action_completeProfileFragment_to_chatsFragment"
@@ -76,7 +79,7 @@
     <fragment
         android:id="@+id/friendsFragment"
         android:name="com.example.messenger.friends.FriendsFragment"
-        android:label="FriendsFragment"
+        android:label="Friends"
         tools:layout="@layout/friends_fragment">
         <action
             android:id="@+id/action_friendsFragment_to_chatsFragment"
@@ -87,11 +90,17 @@
             app:launchSingleTop="true"
             app:popUpTo="@id/friendsFragment"
             app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_friendsFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:launchSingleTop="false"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/chatFragment"
         android:name="com.example.messenger.chat.ChatFragment"
-        android:label="ChatFragment"
+        android:label="Chat"
         tools:layout="@layout/chat_fragment">
         <argument
             android:name="friendUId"

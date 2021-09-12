@@ -74,7 +74,7 @@ open class Utils {
             return getMonth(
                 calender.get(
                     Calendar.MONTH
-                )
+                ) + 1
             ) + ' ' +
                     calender.get(Calendar.DAY_OF_MONTH).toString() + ", " +
                     calender.get(Calendar.YEAR).toString()

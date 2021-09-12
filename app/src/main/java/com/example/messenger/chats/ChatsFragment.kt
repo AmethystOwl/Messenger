@@ -149,7 +149,8 @@ class ChatsFragment : Fragment() {
         sharedViewModel.friendAdditionState.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Loading -> {
-                    // TODO : Show loading animation on button
+
+
                 }
                 is DataState.Success -> {
                     view?.showSnackbar(
@@ -196,7 +197,7 @@ class ChatsFragment : Fragment() {
              .build()
          conversationAdapter = ConversationAdapter(defaultMessagesOptions)
          binding.messagesRecyclerview.adapter = conversationAdapter
- */
+        */
         val defaultUserQuery = sharedViewModel.getDefaultUserQuery()
         val defaultUserOptions = FirestoreRecyclerOptions.Builder<UserProfile>()
             .setQuery(defaultUserQuery, UserProfile::class.java)
@@ -215,6 +216,7 @@ class ChatsFragment : Fragment() {
         super.onPrepareOptionsMenu(menu)
     }
 
+    // TODO : in repository : when error occurs , call Cancel method and pass exception
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.sign_out_option -> {

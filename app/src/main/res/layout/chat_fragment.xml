@@ -38,7 +38,7 @@
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:layout_marginStart="16dp"
-                    app:bindImage="@{viewModel.friendUserData.profilePictureUrl}"
+                    app:bindChatProfilePicture="@{viewModel.friendUserData.profilePictureUrl}"
 
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -95,9 +95,8 @@
                 android:id="@+id/chatRecyclerview"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:background="#000000"
                 android:fitsSystemWindows="true"
-
+                android:background="#2E2E2E"
                 app:layout_constraintBottom_toTopOf="@id/selectImageButton"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -135,7 +134,7 @@
                 android:layout_height="wrap_content"
                 android:background="#00112233"
                 android:contentDescription="@string/send_message"
-                android:src="@drawable/ic_baseline_send_48"
+                android:src="@drawable/ic_baseline_send_blue_48"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/sendTextEditText"

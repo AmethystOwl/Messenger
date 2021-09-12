@@ -235,7 +235,7 @@
     <string name="title_activity_main_activity2aaaaaaa">MainActivity2aaaaaaa</string>
     <string name="option">option</string>
     <string name="select_image_to_send">select Image to send</string>
-    <string name="type_a_message">Type a message</string>
+    <string name="type_a_message">Message</string>
     <string name="send_message">send message</string>
     <string name="sender_user_icon">Sender User Icon</string>
     <!-- TODO: Remove or change this placeholder text -->
@@ -245,4 +245,7 @@
     <string name="selected_image_to_send">Selected image to send</string>
     <string name="send_picture_floating_action_button">Send Picture Floating Action Button</string>
     <string name="image_message">Image Message</string>
+    <string name="copy_text">Copy</string>
+    <string name="delete_message">Delete</string>
+    <string name="save_image">Save</string>
 </resources>

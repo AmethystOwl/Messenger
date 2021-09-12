@@ -1,9 +1,7 @@
 package com.example.messenger
 
-import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 
@@ -51,8 +49,8 @@ class BindingAdapter {
         }
 
         @JvmStatic
-        @BindingAdapter("bindImage")
-        fun ImageView.bindImage(url: String?) {
+        @BindingAdapter("bindChatProfilePicture")
+        fun ImageView.bindChatProfilePicture(url: String?) {
             when {
                 url != null -> {
                     Glide.with(context)
@@ -77,32 +75,14 @@ class BindingAdapter {
             uri?.let {
                 Glide.with(context)
                     .load(uri)
-                    .override(1024, 1024)
+                    .placeholder(R.drawable.ic_baseline_thumbnail_image_200)
+                    .error(R.drawable.ic_baseline_broken_image_200)
+                    .override(512, 512)
                     .into(this)
             }
 
         }
 
-        @JvmStatic
-        @BindingAdapter("textCardViewVisibility")
-        fun CardView.textCardViewVisibility(text: String?) {
-            visibility = if (text.isNullOrBlank() || text.isNullOrEmpty()) {
-                View.GONE
-            } else {
-                View.VISIBLE
-            }
-        }
-
-        @JvmStatic
-        @BindingAdapter("imageCardViewVisibility")
-        fun CardView.imageCardViewVisibility(imageUrl: String?) {
-            visibility = if (imageUrl.isNullOrBlank() || imageUrl.isNullOrEmpty()) {
-                View.GONE
-            } else {
-                View.VISIBLE
-
-            }
-        }
 
         @JvmStatic
         @BindingAdapter("setMessageStatus")

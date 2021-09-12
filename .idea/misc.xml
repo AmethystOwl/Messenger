@@ -15,8 +15,10 @@
         <entry key="app/src/main/res/drawable/ic_baseline_add_48.xml" value="0.2791666666666667" />
         <entry key="app/src/main/res/drawable/ic_baseline_check_circle_outline_10.xml" value="0.20729166666666668" />
         <entry key="app/src/main/res/drawable/ic_baseline_check_circle_outline_white_24.xml" value="0.20729166666666668" />
+        <entry key="app/src/main/res/drawable/ic_baseline_image_24.xml" value="0.2520833333333333" />
         <entry key="app/src/main/res/drawable/ic_baseline_info_48.xml" value="0.3619791666666667" />
         <entry key="app/src/main/res/drawable/ic_baseline_person_add.xml" value="0.3609375" />
+        <entry key="app/src/main/res/drawable/ic_baseline_send_48.xml" value="0.3619791666666667" />
         <entry key="app/src/main/res/drawable/ic_outline_cancel_10.xml" value="0.2598958333333333" />
         <entry key="app/src/main/res/drawable/ic_search_black_24dp.xml" value="0.3609375" />
         <entry key="app/src/main/res/drawable/ic_start_chat_foreground.xml" value="0.22604166666666667" />
@@ -24,7 +26,7 @@
         <entry key="app/src/main/res/drawable/progress_sample2.xml" value="0.15416666666666667" />
         <entry key="app/src/main/res/layout/activity_home.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
-        <entry key="app/src/main/res/layout/chat_fragment.xml" value="0.2" />
+        <entry key="app/src/main/res/layout/chat_fragment.xml" value="0.33" />
         <entry key="app/src/main/res/layout/chat_header_model.xml" value="0.5" />
         <entry key="app/src/main/res/layout/chat_model.xml" value="0.33" />
         <entry key="app/src/main/res/layout/chats_fragment.xml" value="0.16767983789260385" />
@@ -42,10 +44,14 @@
         <entry key="app/src/main/res/layout/message_model.xml" value="0.121875" />
         <entry key="app/src/main/res/layout/phone_fragment.xml" value="0.33" />
         <entry key="app/src/main/res/layout/profile_fragment.xml" value="0.25" />
-        <entry key="app/src/main/res/layout/receive_from_model.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/receive_from_both.xml" value="0.5463347164591977" />
+        <entry key="app/src/main/res/layout/receive_from_image_model.xml" value="0.23541666666666666" />
+        <entry key="app/src/main/res/layout/receive_from_model.xml" value="0.5532503457814661" />
         <entry key="app/src/main/res/layout/register_fragment.xml" value="0.33" />
+        <entry key="app/src/main/res/layout/send_to_both.xml" value="0.23541666666666666" />
+        <entry key="app/src/main/res/layout/send_to_image_model.xml" value="0.33" />
         <entry key="app/src/main/res/layout/send_to_model.xml" value="0.5" />
-        <entry key="app/src/main/res/layout/user_model.xml" value="0.18" />
+        <entry key="app/src/main/res/layout/user_model.xml" value="0.25" />
         <entry key="app/src/main/res/menu/home_nav_menu.xml" value="0.19010416666666666" />
         <entry key="app/src/main/res/menu/navigation_menu.xml" value="0.34479166666666666" />
         <entry key="app/src/main/res/menu/option_menu.xml" value="0.1" />
