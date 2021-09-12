@@ -19,6 +19,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
+@InternalCoroutinesApi
 @AndroidEntryPoint
 class LoginFragment @Inject constructor() : Fragment() {
     private val TAG = "LoginFragment"
@@ -27,17 +29,16 @@ class LoginFragment @Inject constructor() : Fragment() {
     @InternalCoroutinesApi
     private val viewModel: LoginViewModel by viewModels()
 
-    private lateinit var binding: LoginFragmentBinding
+    private var _binding: LoginFragmentBinding? = null
+    private val binding get() = _binding!!
 
 
-    @ExperimentalCoroutinesApi
-    @InternalCoroutinesApi
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = LoginFragmentBinding.inflate(inflater, container, false)
+        _binding = LoginFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -119,7 +120,7 @@ class LoginFragment @Inject constructor() : Fragment() {
                 is DataState.Canceled -> {
                     binding.progressCircular.visibility = View.INVISIBLE
                     binding.loginButton.isEnabled = true
-                    view?.showSnackbar(
+                    requireView().showSnackbar(
                         binding.coordinator,
                         "Operation canceled",
                         Snackbar.LENGTH_LONG,
@@ -175,5 +176,10 @@ class LoginFragment @Inject constructor() : Fragment() {
         binding.passwordTextInputLayout.error = null
 
         return 0
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

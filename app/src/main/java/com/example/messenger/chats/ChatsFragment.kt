@@ -29,18 +29,19 @@ class ChatsFragment : Fragment() {
     private val sharedViewModel: SharedViewModel by viewModels()
     private val chatsViewModel: ChatsViewModel by viewModels()
 
-    private lateinit var binding: ChatsFragmentBinding
+    private var _binding: ChatsFragmentBinding? = null
+    private val binding get() = _binding!!
     private lateinit var searchAdapter: UsersAdapter
 
     // private lateinit var conversationAdapter: ConversationAdapter
-    private lateinit var mainActivity: MainActivity
+    private var mainActivity: MainActivity? = null
 
 
     override fun onStart() {
         super.onStart()
         setupAdapters()
         mainActivity = activity as MainActivity
-        mainActivity.binding.bottomNavView.visibility = View.VISIBLE
+        mainActivity?.binding?.bottomNavView?.visibility = View.VISIBLE
 
         //  conversationAdapter.startListening()
         searchAdapter.startListening()
@@ -48,10 +49,16 @@ class ChatsFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        mainActivity.binding.bottomNavView.visibility = View.INVISIBLE
+        mainActivity?.binding?.bottomNavView?.visibility = View.INVISIBLE
 
         //  conversationAdapter.stopListening()
         searchAdapter.stopListening()
+        mainActivity = null
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -60,7 +67,7 @@ class ChatsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = ChatsFragmentBinding.inflate(inflater, container, false)
+        _binding = ChatsFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = chatsViewModel
         binding.lifecycleOwner = viewLifecycleOwner
         // TODO : Change searchView to make it search Chats, not People, add another Fragment to

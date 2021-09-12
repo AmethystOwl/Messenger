@@ -53,8 +53,11 @@ class ChatFragment : Fragment() {
     private val chatViewModel: ChatViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by viewModels()
 
-    private lateinit var mainActivity: MainActivity
-    private lateinit var binding: ChatFragmentBinding
+    private var mainActivity: MainActivity? = null
+
+    private var _binding: ChatFragmentBinding? = null
+    private val binding get() = _binding!!
+
     private lateinit var myId: String
     private var selectedMsg: Message? = null
     private val getImage =
@@ -62,7 +65,9 @@ class ChatFragment : Fragment() {
             if (it.resultCode == Activity.RESULT_OK) {
                 if (it.data?.data != null) {
                     val message = Message(
-                        message = binding.sendTextEditText.text.toString(),
+                        message = if (binding.sendTextEditText.text.trim()
+                                .isEmpty()
+                        ) null else binding.sendTextEditText.text.toString(),
                         senderUid = myId,
                         profilePictureUrl = currentUserProfile?.profilePictureUrl,
                     )
@@ -78,7 +83,7 @@ class ChatFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = ChatFragmentBinding.inflate(inflater, container, false)
+        _binding = ChatFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = chatViewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -97,7 +102,7 @@ class ChatFragment : Fragment() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s?.length!! > 0) {
+                if (s?.trim()?.isNotEmpty()!!) {
                     setSendButtonState(true)
                 } else {
                     setSendButtonState(false)
@@ -227,7 +232,9 @@ class ChatFragment : Fragment() {
             binding.sendImageButton.setOnClickListener {
                 if (friendUid != null) {
                     val message = Message(
-                        message = binding.sendTextEditText.text.toString(),
+                        message = if (binding.sendTextEditText.text.trim()
+                                .isEmpty()
+                        ) null else binding.sendTextEditText.text.toString(),
                         senderUid = myId,
                         profilePictureUrl = currentUserProfile?.profilePictureUrl,
 
@@ -282,8 +289,7 @@ class ChatFragment : Fragment() {
                     }
                 }
             }
-            // TODO : copy, delete...
-
+            true
         }
     val onImageClickListener = MessageAdapter.OnMessageClickListener { message, view ->
 
@@ -314,7 +320,8 @@ class ChatFragment : Fragment() {
                 }
             }
         }
-        // TODO : save, delete...
+        true
+
     }
 
     // TODO : use blurred image while image downloads(stackoverflow)
@@ -392,6 +399,12 @@ class ChatFragment : Fragment() {
     override fun onStop() {
         super.onStop()
         messageAdapter.stopListening()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mainActivity = null
+        _binding = null
 
     }
 

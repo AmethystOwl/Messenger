@@ -29,8 +29,9 @@ import kotlinx.coroutines.InternalCoroutinesApi
 class FriendsFragment : Fragment() {
     private val TAG = "FriendsFragment"
 
-    private lateinit var mainActivity: MainActivity
-    private lateinit var binding: FriendsFragmentBinding
+    private var mainActivity: MainActivity? = null
+    private var _binding: FriendsFragmentBinding? = null
+    private val binding get() = _binding!!
 
     private val friendsViewModel: FriendsViewModel by viewModels()
     private val sharedViewModel: SharedViewModel by viewModels()
@@ -41,14 +42,16 @@ class FriendsFragment : Fragment() {
         setupAdapters()
 
         mainActivity = activity as MainActivity
-        mainActivity.binding.bottomNavView.visibility = View.VISIBLE
+        mainActivity?.binding?.bottomNavView?.visibility = View.VISIBLE
         searchAdapter.startListening()
     }
 
     override fun onStop() {
         super.onStop()
-        mainActivity.binding.bottomNavView.visibility = View.INVISIBLE
+        mainActivity?.binding?.bottomNavView?.visibility = View.INVISIBLE
         searchAdapter.stopListening()
+
+        mainActivity = null
     }
 
 
@@ -57,7 +60,7 @@ class FriendsFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FriendsFragmentBinding.inflate(inflater, container, false)
+        _binding = FriendsFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = friendsViewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -203,7 +206,6 @@ class FriendsFragment : Fragment() {
         super.onPrepareOptionsMenu(menu)
     }
 
-    @ExperimentalCoroutinesApi
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.sign_out_option -> {
@@ -299,5 +301,9 @@ class FriendsFragment : Fragment() {
         friendsViewModel.getFriendList()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 
 }

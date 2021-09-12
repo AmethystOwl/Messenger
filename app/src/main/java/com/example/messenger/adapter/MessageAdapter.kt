@@ -9,6 +9,7 @@ import com.example.messenger.databinding.*
 import com.example.messenger.model.Message
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
+import java.io.InvalidClassException
 import javax.inject.Inject
 
 class MessageAdapter @Inject constructor(
@@ -33,11 +34,11 @@ class MessageAdapter @Inject constructor(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(
             data: Message,
-            onMessageClickListener: OnMessageClickListener,
+            onImageClickListener: OnMessageClickListener,
         ) {
             binding.data = data
             binding.view = binding.imageCardView
-            binding.onMessageClickListener = onMessageClickListener
+            binding.onImageClickListener = onImageClickListener
             binding.executePendingBindings()
 
         }
@@ -151,8 +152,7 @@ class MessageAdapter @Inject constructor(
         fun bind(
             data: Message,
             onMessageClickListener: OnMessageClickListener,
-
-            ) {
+        ) {
             binding.data = data
             binding.view = binding.messageTextView
             binding.onMessageClickListener = onMessageClickListener
@@ -217,9 +217,9 @@ class MessageAdapter @Inject constructor(
         }
 
         companion object {
-            fun from(parent: ViewGroup): ReceiveImageViewHolder {
-                return ReceiveImageViewHolder(
-                    ReceiveFromImageModelBinding
+            fun from(parent: ViewGroup): ReceiveBothViewHolder {
+                return ReceiveBothViewHolder(
+                    ReceiveFromBothBinding
                         .inflate(LayoutInflater.from(parent.context))
                 )
             }
@@ -236,9 +236,12 @@ class MessageAdapter @Inject constructor(
                     ITEM_SENDER_TEXT
                 } else if (item.message == null && item.imageMessageUrl != null) {
                     ITEM_SENDER_IMAGE
-                } else {
+                } else if (item.message != null && item.imageMessageUrl != null) {
                     ITEM_SENDER_BOTH
+                } else {
+                    throw InvalidClassException("Invalid Sender View Holder Class")
                 }
+
 
             }
             false -> {
@@ -246,8 +249,10 @@ class MessageAdapter @Inject constructor(
                     ITEM_RECEIVER_TEXT
                 } else if (item.message == null && item.imageMessageUrl != null) {
                     ITEM_RECEIVER_IMAGE
-                } else {
+                } else if (item.message != null && item.imageMessageUrl != null) {
                     ITEM_RECEIVER_BOTH
+                } else {
+                    throw InvalidClassException("Invalid Receiver View Holder Class")
                 }
             }
         }
@@ -290,7 +295,7 @@ class MessageAdapter @Inject constructor(
 
     }
 
-    class OnMessageClickListener(private val onClickListener: (message: Message, v: View) -> Unit) {
+    class OnMessageClickListener(private val onClickListener: (message: Message, v: View) -> Boolean) {
         fun onClick(message: Message, v: View) = onClickListener(message, v)
     }
 

@@ -28,20 +28,23 @@ import kotlinx.coroutines.InternalCoroutinesApi
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.EasyPermissions
 
+@ExperimentalCoroutinesApi
+@InternalCoroutinesApi
+
 @AndroidEntryPoint
 class CompleteProfileFragment : Fragment() {
     private val TAG = "CompleteProfileFragment"
 
     private val viewModel: CompleteProfileViewModel by viewModels()
     lateinit var getContent: ActivityResultLauncher<String>
-    private lateinit var binding: CompleteProfileFragmentBinding
+    private var _binding: CompleteProfileFragmentBinding? = null
+    private val binding get() = _binding!!
     private lateinit var userDoc: DocumentReference
     private var userProfile: UserProfile? = null
     private var uid: String? = null
     private var profilePictureUrl: String? = null
 
-    @ExperimentalCoroutinesApi
-    @InternalCoroutinesApi
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         getUserProfile()
@@ -62,13 +65,12 @@ class CompleteProfileFragment : Fragment() {
             }
     }
 
-    @ExperimentalCoroutinesApi
-    @InternalCoroutinesApi
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = CompleteProfileFragmentBinding.inflate(inflater, container, false)
+        _binding = CompleteProfileFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -211,5 +213,9 @@ class CompleteProfileFragment : Fragment() {
 
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
+    }
 
 }

@@ -21,24 +21,25 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
 @AndroidEntryPoint
+@ExperimentalCoroutinesApi
+@InternalCoroutinesApi
 class EmailVerificationFragment : Fragment() {
-    private val TAG = "EmailVerificationFragm"
+    private val TAG = "EmailVerificationFragme"
 
     @ExperimentalCoroutinesApi
     @InternalCoroutinesApi
     private val viewModel: EmailVerificationViewModel by viewModels()
-
-    private lateinit var binding: EmailVerificationFragmentBinding
+    private var _binding: EmailVerificationFragmentBinding? = null
+    private val binding get() = _binding!!
     private var userProfile: UserProfile? = null
     private lateinit var userDoc: DocumentReference
 
-    @ExperimentalCoroutinesApi
-    @InternalCoroutinesApi
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = EmailVerificationFragmentBinding.inflate(inflater, container, false)
+        _binding = EmailVerificationFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -145,6 +146,10 @@ class EmailVerificationFragment : Fragment() {
         }
 
         return binding.root
+    }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

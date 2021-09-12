@@ -85,7 +85,7 @@
                         android:background="?attr/selectableItemBackground"
                         android:contentDescription="@string/image_message"
                         android:maxWidth="260dp"
-                        android:onClick="@{() -> onImageClickListener.onClick(data,view)}"
+                        android:onLongClick="@{() -> onImageClickListener.onClick(data,view)}"
                         app:bindImageMessage="@{data.imageMessageUrl}"
                         tools:src="@drawable/ic_avatar_foreground" />
 
@@ -97,7 +97,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
                         android:maxWidth="260dp"
-                        android:onClick="@{() -> onMessageClickListener.onClick(data,view)}"
+                        android:onLongClick="@{() -> onMessageClickListener.onClick(data,view)}"
                         android:paddingLeft="12dp"
 
                         android:paddingTop="8dp"

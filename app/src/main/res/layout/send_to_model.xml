@@ -62,7 +62,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:minHeight="48dp"
-                android:onClick="@{() -> onMessageClickListener.onClick(data,view)}"
+                android:onLongClick="@{() -> onMessageClickListener.onClick(data,view)}"
                 app:cardBackgroundColor="#774df2"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"

@@ -18,21 +18,22 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 
+@InternalCoroutinesApi
+@ExperimentalCoroutinesApi
 @AndroidEntryPoint
 class RegisterFragment : Fragment() {
     private val TAG = "RegisterFragment"
 
     private val viewModel: RegisterViewModel by viewModels()
-    private lateinit var binding: RegisterFragmentBinding
+    private var _binding: RegisterFragmentBinding? = null
+    private val binding get() = _binding!!
 
-    @InternalCoroutinesApi
-    @ExperimentalCoroutinesApi
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = RegisterFragmentBinding.inflate(inflater, container, false)
+        _binding = RegisterFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = viewModel
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -203,6 +204,11 @@ class RegisterFragment : Fragment() {
 
         }
         return binding.root
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        _binding = null
     }
 
     private fun showMessage(view: View, message: String) {

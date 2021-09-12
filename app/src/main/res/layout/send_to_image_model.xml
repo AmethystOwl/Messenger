@@ -9,9 +9,7 @@
             name="onImageClickListener"
             type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
 
-        <variable
-            name="onMessageClickListener"
-            type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
+
 
         <variable
             name="data"
@@ -59,7 +57,7 @@
                 android:id="@+id/imageCardView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onClick="@{() -> onImageClickListener.onClick(data,view)}"
+                android:onLongClick="@{() -> onImageClickListener.onClick(data,view)}"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
