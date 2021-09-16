@@ -30,6 +30,7 @@ class CompleteProfileViewModel @Inject constructor(private val repo: Repository)
 
     fun getAuthUser() = repo.getCurrentUser()
 
+
     fun getDocRef(collectionName: String, documentName: String) =
         repo.getDocRef(collectionName, documentName)
 

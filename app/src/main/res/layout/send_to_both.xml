@@ -22,6 +22,10 @@
             name="view"
             type="android.view.View" />
 
+        <variable
+            name="pos"
+            type="Integer" />
+
     </data>
 
 
@@ -29,7 +33,7 @@
         android:id="@+id/parentRelativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#2E2E2E"
+        android:background="#000000"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
@@ -64,38 +68,41 @@
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
-                app:cardUseCompatPadding="true">
+                app:cardUseCompatPadding="true"
+                app:isChecked="@{data.checked}"
+                app:isSender="@{data.sender}">
 
                 <LinearLayout
                     android:id="@+id/linearLayout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
-                    android:gravity="end"
+                    android:gravity="end|center"
                     android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/imageMessageImageView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="?attr/selectableItemBackground"
                         android:contentDescription="@string/image_message"
                         android:maxWidth="260dp"
-                        android:onLongClick="@{() -> onImageClickListener.onClick(data,view)}"
+                        android:onClick="@{() -> onImageClickListener.onClick(data,view,pos)}"
+                        android:onLongClick="@{() -> onImageClickListener.onLongClick(data,view,pos)}"
                         app:bindImageMessage="@{data.imageMessageUrl}"
                         tools:src="@drawable/ic_avatar_foreground" />
 
                     <TextView
                         android:id="@+id/messageTextView"
                         bindMessage="@{data.message}"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
+                        android:background="?android:attr/selectableItemBackgroundBorderless"
                         android:maxWidth="260dp"
+                        android:onClick="@{() -> onMessageClickListener.onClick(data,view,pos)}"
+                        android:onLongClick="@{() -> onMessageClickListener.onLongClick(data,view,pos)}"
                         android:paddingLeft="12dp"
                         android:paddingTop="8dp"
-                        android:onLongClick="@{() -> onMessageClickListener.onClick(data,view)}"
-
                         android:paddingRight="12dp"
                         android:textColor="#ffffff"
                         android:textSize="16sp"
@@ -113,12 +120,13 @@
             android:id="@+id/messageTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/relativeLayout"
-            android:layout_marginEnd="5dp"
-
-            android:layout_toStartOf="@id/messageStatus"
+            android:layout_below="@id/relativeLayout"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="20dp"
             android:textColor="#ffffff"
             android:textSize="12sp"
+            app:messageTimeVisibility="@{data.checked}"
+
             app:getTimeFromTimeStamp="@{data.timestamp}"
             tools:text="10:00 AM" />
 

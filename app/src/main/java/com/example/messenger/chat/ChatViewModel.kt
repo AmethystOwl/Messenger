@@ -30,6 +30,19 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
     private var _imageMessageState = MutableLiveData<DataState<Int?>>()
     val imageMessageState: LiveData<DataState<Int?>> get() = _imageMessageState
 
+    private var _selectedMessage = MutableLiveData<Message?>()
+    val selectedMessage: LiveData<Message?> get() = _selectedMessage
+
+    private var _selectedMessagePosition = MutableLiveData<Int?>()
+    val selectedMessagePosition: LiveData<Int?> get() = _selectedMessagePosition
+
+    private var _documentChanges = MutableLiveData<DataState<Int?>>()
+    val documentChanges: LiveData<DataState<Int?>> get() = _documentChanges
+
+    init {
+        _selectedMessagePosition.value = 0
+    }
+
     fun friendInfo(uId: String) {
         viewModelScope.launch {
             repo.userProfileByUId(uId).collect {
@@ -56,6 +69,19 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
         viewModelScope.launch {
             repo.sendImage(message, imageUri, friendUid).collect {
                 _imageMessageState.value = it
+            }
+        }
+    }
+
+    fun setSelectedMessage(message: Message?, position: Int?) {
+        _selectedMessage.value = message
+        _selectedMessagePosition.value = position
+    }
+
+    fun observeDocChanges(friendUid: String) {
+        viewModelScope.launch {
+            repo.observeDocChanges(friendUid).collect {
+                _documentChanges.value = it
             }
         }
     }

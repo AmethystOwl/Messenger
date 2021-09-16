@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.example.messenger.chat.ChatViewModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        tools:context=".chat.viewImage.ViewImageFragment">
+
+        <ImageView
+            android:id="@+id/messageImageView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/message_image"
+            app:bindSelectedMessageImage="@{viewModel.selectedMessage}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <RelativeLayout
+            android:id="@+id/relativeLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="#B35A5A5A"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/backImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/ic_baseline_arrow_back_48"
+                android:contentDescription="@string/back"
+                android:minWidth="32dp"
+                android:minHeight="48dp" />
+
+            <TextView
+                android:id="@+id/nameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_toStartOf="@id/moreOptionsImageButton"
+                android:layout_toEndOf="@id/backImageButton"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:selectedMessage="@{viewModel.selectedMessage}"
+                app:senderFirstName="@{viewModel.friendUserData.fname}"
+                app:senderLastName="@{viewModel.friendUserData.lname}"
+                tools:text="name" />
+            <!--
+                    save message in viewModel and show date down there
+            -->
+
+            <TextView
+                android:id="@+id/dateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/nameTextView"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="10dp"
+                android:layout_toStartOf="@id/moreOptionsImageButton"
+                android:layout_toEndOf="@id/backImageButton"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                app:getDateFromTimeStamp="@{viewModel.selectedMessage.timestamp}"
+                tools:text="date" />
+
+            <ImageButton
+                android:id="@+id/moreOptionsImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_margin="5dp"
+                android:background="@drawable/ic_sharp_more_vert_24"
+                android:contentDescription="@string/more_options"
+                android:minWidth="48dp"
+                android:minHeight="48dp" />
+        </RelativeLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

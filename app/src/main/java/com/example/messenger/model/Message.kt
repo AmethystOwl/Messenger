@@ -8,6 +8,10 @@ data class Message(
     var senderUid: String? = null,
     var timestamp: Long = System.currentTimeMillis(),
     var profilePictureUrl: String? = null,
-    @get:Exclude var isSent: Boolean = false
-)
+    @get:Exclude var isSent: Boolean = false,
+    @get:Exclude var isChecked: Boolean = false,
+    @get:Exclude var isSender: Boolean = false,
+
+
+    )
 

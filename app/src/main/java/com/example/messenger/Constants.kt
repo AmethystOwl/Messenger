@@ -1,6 +1,11 @@
 package com.example.messenger
 
 object Constants {
+    const val DOCUMENT_ADDED = 601
+    const val DOCUMENT_MODIFIED = 602
+    const val DOCUMENT_REMOVED = 603
+
+
     const val IMAGE_MESSAGE_SUCCESS = 600
     const val STORAGE_CHAT_UPLOADS_FOLDER = "uploads"
     const val INTENT_TYPE_IMAGE = "image/*"

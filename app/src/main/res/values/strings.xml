@@ -248,4 +248,8 @@
     <string name="copy_text">Copy</string>
     <string name="delete_message">Delete</string>
     <string name="save_image">Save</string>
+    <string name="back">back</string>
+    <string name="more_options">more options</string>
+    <string name="message_image">Message Image</string>
+    <string name="you">You</string>
 </resources>

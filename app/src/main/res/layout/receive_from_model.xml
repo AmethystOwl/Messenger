@@ -5,9 +5,6 @@
 
     <data>
 
-        <variable
-            name="onImageClickListener"
-            type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
 
         <variable
             name="onMessageClickListener"
@@ -18,12 +15,13 @@
             type="com.example.messenger.model.Message" />
 
         <variable
-            name="position"
-            type="Integer" />
-
-        <variable
             name="view"
             type="android.view.View" />
+
+
+        <variable
+            name="pos"
+            type="Integer" />
     </data>
 
 
@@ -31,7 +29,7 @@
         android:id="@+id/parentRelativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#2E2E2E"
+        android:background="#000000"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
@@ -52,6 +50,7 @@
             android:layout_height="42dp"
             android:layout_below="@id/dateTextView"
             android:layout_marginStart="5dp"
+            tools:ignore="ImageContrastCheck"
             tools:src="@drawable/avatar" />
 
         <RelativeLayout
@@ -69,12 +68,15 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:minHeight="48dp"
-                android:onLongClick="@{() -> onMessageClickListener.onClick(data,view)}"
-                app:cardBackgroundColor="#000000"
+                android:onClick="@{() -> onMessageClickListener.onClick(data,view,pos)}"
+                android:onLongClick="@{() -> onMessageClickListener.onLongClick(data,view,pos)}"
+                app:cardBackgroundColor="#2E2E2E"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
-                app:cardUseCompatPadding="true">
+                app:cardUseCompatPadding="true"
+                app:isChecked="@{data.checked}"
+                app:isSender="@{data.sender}">
 
                 <LinearLayout
                     android:id="@+id/linearLayout"
@@ -92,7 +94,6 @@
                         android:layout_marginBottom="8dp"
                         android:maxWidth="260dp"
                         android:paddingLeft="12dp"
-
                         android:paddingTop="8dp"
                         android:paddingRight="12dp"
                         android:textColor="#ffffff"
@@ -110,7 +111,6 @@
             android:layout_height="15dp"
             android:layout_alignBottom="@id/relativeLayout"
             android:layout_toEndOf="@id/relativeLayout"
-            android:src="@drawable/ic_baseline_access_time_white_15"
             app:setMessageStatus="@{data.isSent}"
             tools:src="@drawable/ic_baseline_access_time_white_15" />
 
@@ -118,10 +118,12 @@
             android:id="@+id/messageTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/relativeLayout"
-            android:layout_marginStart="5dp"
-            android:layout_toEndOf="@id/messageStatus"
+            android:layout_below="@id/relativeLayout"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/senderProfilePicture"
             android:textColor="#ffffff"
+            app:messageTimeVisibility="@{data.checked}"
+
             android:textSize="12sp"
             app:getTimeFromTimeStamp="@{data.timestamp}"
             tools:text="10:00 AM" />

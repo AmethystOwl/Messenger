@@ -105,7 +105,15 @@
         <argument
             android:name="friendUId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_chatFragment_to_imageFragment"
+            app:destination="@id/viewImageFragment" />
 
     </fragment>
+    <fragment
+        android:id="@+id/viewImageFragment"
+        android:name="com.example.messenger.chat.viewImage.ViewImageFragment"
+        android:label="ViewImageFragment"
+        tools:layout="@layout/fragment_view_image" />
 
 </navigation>

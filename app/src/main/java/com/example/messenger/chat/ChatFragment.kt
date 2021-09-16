@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -14,12 +15,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.messenger.DataState
-import com.example.messenger.MainActivity
-import com.example.messenger.R
-import com.example.messenger.SharedViewModel
+import com.example.messenger.*
 import com.example.messenger.adapter.MessageAdapter
 import com.example.messenger.databinding.ChatFragmentBinding
 import com.example.messenger.model.Message
@@ -42,24 +42,28 @@ class ChatFragment : Fragment() {
     private val TAG = "ChatFragment"
     private val ACTION_COPY_TEXT = 1
     private val ACTION_DELETE_TEXT = 2
-    private val ACTION_SAVE_IMAGE = 3
-    private val ACTION_DELETE_IMAGE = 4
+
 
     private lateinit var messageAdapter: MessageAdapter
     private var friendProfile: UserProfile? = null
     private var currentUserProfile: UserProfile? = null
     private var friendUid: String? = null
 
-    private val chatViewModel: ChatViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by activityViewModels()
     private val sharedViewModel: SharedViewModel by viewModels()
 
     private var mainActivity: MainActivity? = null
 
-    private var _binding: ChatFragmentBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var binding: ChatFragmentBinding
 
     private lateinit var myId: String
     private var selectedMsg: Message? = null
+    private var lastPos: Int = -1
+
+    // TODO : lma y3ml pick l image,
+    //  redirect 3la fragment tnya y2dr y7ot text t7t el image,
+    //  w lma ydos 3la el send button yrg3o ll fragment de,
+    //  shared viewModel zy el ViewImageFragment
     private val getImage =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
@@ -83,19 +87,15 @@ class ChatFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = ChatFragmentBinding.inflate(inflater, container, false)
+        binding = ChatFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = chatViewModel
         binding.lifecycleOwner = viewLifecycleOwner
-
-
-
-
-
         myId = sharedViewModel.getCurrentUser()?.uid!!
         friendUid = ChatFragmentArgs.fromBundle(requireArguments()).friendUId
         if (binding.sendTextEditText.text.isEmpty()) {
             setSendButtonState(false)
         }
+
         binding.sendTextEditText.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, before: Int, cound: Int) {
 
@@ -121,7 +121,42 @@ class ChatFragment : Fragment() {
 
         sharedViewModel.getCurrentUserProfile()
         chatViewModel.friendInfo(friendUid!!)
-        sharedViewModel.currentUserProfileState.observe(viewLifecycleOwner) { currentUserProfileDataState ->
+
+        chatViewModel.selectedMessagePosition.observe(viewLifecycleOwner) { selectedMessagePosition ->
+            selectedMessagePosition?.let {
+                lastPos = it
+            }
+
+        }
+        chatViewModel.observeDocChanges(friendUid!!)
+        chatViewModel.documentChanges.observe(viewLifecycleOwner) { docChangesDataState ->
+            when (docChangesDataState) {
+                is DataState.Error -> {
+
+                }
+                is DataState.Success -> {
+                    // TODO : it works but it's not the desired result, it goes to bottom then scrolls back..
+                    if (docChangesDataState.data?.equals(Constants.DOCUMENT_ADDED)!!) {
+                        if (lastPos == -1) {
+                            binding.chatRecyclerview.scrollToPosition(0)
+                            lastPos = -1
+                        } else {
+                            binding.chatRecyclerview.scrollToPosition(lastPos)
+
+                        }
+                    }
+                }
+
+                else -> {
+
+                }
+
+
+            }
+
+        }
+        sharedViewModel.currentUserProfileState.observe(viewLifecycleOwner)
+        { currentUserProfileDataState ->
             when (currentUserProfileDataState) {
                 is DataState.Loading -> {
 
@@ -172,7 +207,6 @@ class ChatFragment : Fragment() {
                         // sent to server, add checkmark
                         // all old messages are using "sending" icon for now...
                         messageAdapter.setItemSentStatus(0, true)
-                        // binding.chatRecyclerview.smoothScrollToPosition(0)
 
                     }
                     is DataState.Canceled -> {
@@ -207,7 +241,6 @@ class ChatFragment : Fragment() {
                         // sent to server, add checkmark
                         // all old messages are using "sending" icon for now...
                         messageAdapter.setItemSentStatus(0, true)
-                        //  binding.chatRecyclerview.scrollToPosition(0)
 
 
                     }
@@ -255,74 +288,122 @@ class ChatFragment : Fragment() {
         return binding.root
     }
 
-    val onMessageClickListener =
-        MessageAdapter.OnMessageClickListener { message, view ->
-            selectedMsg = message
-            val messageQuickAction = QuickAction(requireContext(), QuickAction.HORIZONTAL)
-            messageQuickAction.setColor(android.graphics.Color.DKGRAY)
-            messageQuickAction.setTextColor(android.graphics.Color.WHITE)
-            messageQuickAction.setEnabledDivider(true)
-            val copyAction =
-                ActionItem(ACTION_COPY_TEXT, getString(R.string.copy_text))
-            val deleteAction =
-                ActionItem(ACTION_DELETE_TEXT, getString(R.string.delete_message))
-            messageQuickAction.addActionItem(copyAction, deleteAction)
-            messageQuickAction.show(view)
-            messageQuickAction.setOnActionItemClickListener {
-                when (it.actionId) {
-                    ACTION_COPY_TEXT -> {
-                        val clipboard =
-                            requireActivity().getSystemService(Service.CLIPBOARD_SERVICE) as ClipboardManager
-                        if (selectedMsg?.message != null) {
-                            val clipData = ClipData.newPlainText("uuh", selectedMsg?.message)
-                            clipboard.setPrimaryClip(clipData)
-                            Toast.makeText(
-                                requireContext(),
-                                "Message copied",
-                                Toast.LENGTH_SHORT
-                            )
-                                .show()
+
+    val onMessageClickListener = MessageAdapter.OnMessageClickListener(
+        onClickListener = object : (Message, View, Int) -> Unit {
+            override fun invoke(message: Message, v: View, pos: Int) {
+                Log.i(TAG, "invoke message: clicked")
+                messageAdapter.setItemChecked(pos, true)
+                if (pos == 0) {
+                    binding.chatRecyclerview.scrollToPosition(0)
+                }
+
+            }
+
+        },
+        onLongClickListener = object : (Message, View, Int) -> Boolean {
+            override fun invoke(message: Message, v: View, pos: Int): Boolean {
+                selectedMsg = message
+                val messageQuickAction = QuickAction(requireContext(), QuickAction.HORIZONTAL)
+                messageQuickAction.setColor(Color.DKGRAY)
+                messageQuickAction.setTextColor(Color.WHITE)
+                messageQuickAction.setEnabledDivider(true)
+                val copyAction =
+                    ActionItem(ACTION_COPY_TEXT, getString(R.string.copy_text))
+                val deleteAction =
+                    ActionItem(ACTION_DELETE_TEXT, getString(R.string.delete_message))
+                messageQuickAction.addActionItem(copyAction, deleteAction)
+                messageQuickAction.show(v)
+                messageQuickAction.setOnActionItemClickListener {
+                    when (it.actionId) {
+                        ACTION_COPY_TEXT -> {
+                            val clipboard =
+                                requireActivity().getSystemService(Service.CLIPBOARD_SERVICE) as ClipboardManager
+                            if (selectedMsg?.message != null) {
+                                val clipData = ClipData.newPlainText("uuh", selectedMsg?.message)
+                                clipboard.setPrimaryClip(clipData)
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Message copied",
+                                    Toast.LENGTH_SHORT
+                                )
+                                    .show()
+                            }
+                        }
+                        ACTION_DELETE_TEXT -> {
+
                         }
                     }
-                    ACTION_DELETE_TEXT -> {
-
-                    }
                 }
+
+                return true
             }
-            true
+
+
         }
-    val onImageClickListener = MessageAdapter.OnMessageClickListener { message, view ->
 
-        val imageQuickAction = QuickAction(requireContext(), QuickAction.HORIZONTAL)
-        imageQuickAction.setColor(android.graphics.Color.DKGRAY)
-        imageQuickAction.setTextColor(android.graphics.Color.WHITE)
-        imageQuickAction.setAnimStyle(QuickAction.Animation.GROW_FROM_CENTER)
-        imageQuickAction.setEnabledDivider(true)
-        val copyAction =
-            ActionItem(
-                ACTION_SAVE_IMAGE,
-                getString(R.string.save_image)
-            )
-        val deleteAction =
-            ActionItem(
-                ACTION_DELETE_IMAGE,
-                getString(R.string.delete_message)
-            )
-        imageQuickAction.addActionItem(copyAction, deleteAction)
-        imageQuickAction.show(view)
-        imageQuickAction.setOnActionItemClickListener {
-            when (it.actionId) {
-                ACTION_SAVE_IMAGE -> {
 
+    )
+
+    // TODO : QuickAction crashes, find alternatives..
+    val onImageClickListener = MessageAdapter.OnMessageClickListener(
+        onClickListener = object : (Message, View, Int) -> Unit {
+            override fun invoke(message: Message, v: View, pos: Int) {
+                Log.i(TAG, "invoke image: clicked")
+                // TODO : open image with save etc..
+                //        at the top left: Sender name, date below it
+                //        at the top right: option menu with save & delete options
+                if (message.imageMessageUrl != null) {
+                    val test =
+                        (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+                    chatViewModel.setSelectedMessage(message, test)
+
+                    findNavController().navigate(ChatFragmentDirections.actionChatFragmentToImageFragment())
                 }
-                ACTION_DELETE_IMAGE -> {
 
-                }
             }
-        }
-        true
+        }, onLongClickListener = object : (Message, View, Int) -> Boolean {
+            override fun invoke(message: Message, v: View, pos: Int): Boolean {
+                Log.i(TAG, "invoke image: longClicked")
+                /*   val imageQuickAction = QuickAction(requireContext(), QuickAction.HORIZONTAL)
+                   imageQuickAction.setColor(Color.DKGRAY)
+                   imageQuickAction.setTextColor(Color.WHITE)
+                   imageQuickAction.setAnimStyle(QuickAction.Animation.GROW_FROM_CENTER)
+                   imageQuickAction.setEnabledDivider(true)
+                   val copyAction =
+                       ActionItem(
+                           ACTION_SAVE_IMAGE,
+                           getString(R.string.save_image)
+                       )
+                   val deleteAction =
+                       ActionItem(
+                           ACTION_DELETE_IMAGE,
+                           getString(R.string.delete_message)
+                       )
+                   imageQuickAction.addActionItem(copyAction, deleteAction)
+                   imageQuickAction.show(v)
+                   imageQuickAction.setOnActionItemClickListener {
+                       when (it.actionId) {
+                           ACTION_SAVE_IMAGE -> {
 
-    }
+                           }
+                           ACTION_DELETE_IMAGE -> {
+
+                           }
+                       }
+                   }*/
+
+                messageAdapter.setItemChecked(pos, true)
+                if (pos == 0) {
+                    binding.chatRecyclerview.scrollToPosition(0)
+                }
+                return true
+            }
+
+        }
+
+    )
+
 
     // TODO : use blurred image while image downloads(stackoverflow)
     private fun setupAdapter() {
@@ -352,7 +433,7 @@ class ChatFragment : Fragment() {
             }
 
             override fun onDataChanged() {
-                binding.chatRecyclerview.scrollToPosition(0)
+                //   binding.chatRecyclerview.scrollToPosition(0)
 
             }
 
@@ -363,8 +444,11 @@ class ChatFragment : Fragment() {
         })
 
         binding.chatRecyclerview.layoutManager = linearLayoutManager
+        //  messageAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
+
         binding.chatRecyclerview.adapter = messageAdapter
         binding.chatRecyclerview.setHasFixedSize(true)
+        // binding.chatRecyclerview.scrollToPosition(0)
     }
 
     private fun setSendButtonState(isEnabled: Boolean) {
@@ -379,33 +463,23 @@ class ChatFragment : Fragment() {
         }
         binding.sendImageButton.isEnabled = isEnabled
 
-        QuickAction.OnActionItemClickListener {
-            when (it.actionId) {
-                121 -> {
-                    Toast.makeText(requireContext(), it.title, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
     }
 
     override fun onStart() {
         super.onStart()
+        Log.i(TAG, "onStart: ")
+        chatViewModel.setSelectedMessage(null, null)
         mainActivity = activity as MainActivity
         messageAdapter.startListening()
-        binding.chatRecyclerview.scrollToPosition(0)
 
     }
 
     override fun onStop() {
         super.onStop()
+        Log.i(TAG, "onStop: ")
         messageAdapter.stopListening()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
         mainActivity = null
-        _binding = null
-
     }
+
 
 }

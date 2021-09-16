@@ -6,23 +6,23 @@
     <data>
 
         <variable
-            name="onImageClickListener"
+            name="onImageLongClickListener"
             type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
-
 
 
         <variable
             name="data"
             type="com.example.messenger.model.Message" />
 
-        <variable
-            name="position"
-            type="Integer" />
 
         <variable
             name="view"
             type="android.view.View" />
 
+
+        <variable
+            name="pos"
+            type="Integer" />
     </data>
 
 
@@ -30,7 +30,7 @@
         android:id="@+id/parentRelativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#2E2E2E"
+        android:background="#000000"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
@@ -57,7 +57,12 @@
                 android:id="@+id/imageCardView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:onLongClick="@{() -> onImageClickListener.onClick(data,view)}"
+                android:clickable="true"
+
+                android:focusable="true"
+                android:minHeight="48dp"
+                android:onClick="@{() -> onImageLongClickListener.onClick(data,view,pos)}"
+                android:onLongClick="@{() -> onImageLongClickListener.onLongClick(data,view,pos)}"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
@@ -66,8 +71,9 @@
                 <ImageView
                     android:id="@+id/imageMessageImageView"
                     android:layout_width="wrap_content"
+
                     android:layout_height="wrap_content"
-                    android:background="?attr/selectableItemBackground"
+                    android:background="?android:attr/selectableItemBackground"
                     android:contentDescription="@string/image_message"
                     android:maxWidth="260dp"
                     app:bindImageMessage="@{data.imageMessageUrl}"
@@ -82,12 +88,14 @@
             android:id="@+id/messageTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/relativeLayout"
-            android:layout_marginEnd="5dp"
-
+            android:layout_below="@id/relativeLayout"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="20dp"
             android:layout_toStartOf="@id/messageStatus"
             android:textColor="#ffffff"
             android:textSize="12sp"
+            app:messageTimeVisibility="@{data.checked}"
+
             app:getTimeFromTimeStamp="@{data.timestamp}"
             tools:text="10:00 AM" />
 

@@ -27,18 +27,22 @@ class MessageAdapter @Inject constructor(
     private val ITEM_RECEIVER_TEXT = 3
     private val ITEM_RECEIVER_IMAGE = 4
     private val ITEM_RECEIVER_BOTH = 5
+    private var oldPos = -1
 
-    class SendImageViewHolder(
+
+    private class SendImageViewHolder(
         private val binding: SendToImageModelBinding,
     ) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(
             data: Message,
             onImageClickListener: OnMessageClickListener,
+            position: Int
         ) {
             binding.data = data
             binding.view = binding.imageCardView
-            binding.onImageClickListener = onImageClickListener
+            binding.onImageLongClickListener = onImageClickListener
+            binding.pos = position
             binding.executePendingBindings()
 
         }
@@ -56,17 +60,19 @@ class MessageAdapter @Inject constructor(
 
     }
 
-    class SendTextViewHolder(
+    private class SendTextViewHolder(
         private val binding: SendToModelBinding,
     ) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(
             data: Message,
             onMessageClickListener: OnMessageClickListener,
+            position: Int
         ) {
             binding.data = data
+            binding.onMessageLongClickListener = onMessageClickListener
             binding.view = binding.messageTextView
-            binding.onMessageClickListener = onMessageClickListener
+            binding.pos = position
             binding.executePendingBindings()
 
         }
@@ -84,20 +90,22 @@ class MessageAdapter @Inject constructor(
 
     }
 
-    class SendToBothViewModel(
+    private class SendToBothViewModel(
         private val binding: SendToBothBinding,
     ) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(
             data: Message,
+            onMessageClickListener: OnMessageClickListener,
             onImageClickListener: OnMessageClickListener,
-            onMessageClickListener: OnMessageClickListener
+            position: Int
 
         ) {
             binding.data = data
             binding.view = binding.messageCardView
-            binding.onImageClickListener = onImageClickListener
             binding.onMessageClickListener = onMessageClickListener
+            binding.onImageClickListener = onImageClickListener
+            binding.pos = position
             binding.executePendingBindings()
 
         }
@@ -113,38 +121,7 @@ class MessageAdapter @Inject constructor(
         }
     }
 
-    /* class SendViewHolder(
-         private val binding: SendToModelBinding,
-     ) :
-         RecyclerView.ViewHolder(binding.root) {
-
-         fun bind(
-             data: Message,
-             onMessageClickListener: OnMessageClickListener,
-             onImageClickListener: OnMessageClickListener,
-         ) {
-             binding.data = data
-             binding.view = binding.messageTextView
-             binding.onMessageClickListener = onMessageClickListener
-             binding.onImageClickListener = onImageClickListener
-             binding.executePendingBindings()
-
-         }
-
-         companion object {
-             fun from(parent: ViewGroup): SendViewHolder {
-                 return SendViewHolder(
-                     SendToModelBinding.inflate(
-                         LayoutInflater.from(parent.context)
-                     )
-                 )
-             }
-         }
-
-
-     }*/
-
-    class ReceiveTextViewHolder(
+    private class ReceiveTextViewHolder(
         private val binding: ReceiveFromModelBinding,
     ) :
         RecyclerView.ViewHolder(binding.root) {
@@ -152,11 +129,12 @@ class MessageAdapter @Inject constructor(
         fun bind(
             data: Message,
             onMessageClickListener: OnMessageClickListener,
+            position: Int
         ) {
             binding.data = data
             binding.view = binding.messageTextView
             binding.onMessageClickListener = onMessageClickListener
-
+            binding.pos = position
             binding.executePendingBindings()
         }
 
@@ -171,7 +149,7 @@ class MessageAdapter @Inject constructor(
 
     }
 
-    class ReceiveImageViewHolder(
+    private class ReceiveImageViewHolder(
         private val binding: ReceiveFromImageModelBinding,
     ) :
         RecyclerView.ViewHolder(binding.root) {
@@ -179,11 +157,12 @@ class MessageAdapter @Inject constructor(
         fun bind(
             data: Message,
             onImageClickListener: OnMessageClickListener,
+            position: Int
         ) {
             binding.data = data
             binding.onImageClickListener = onImageClickListener
             binding.view = binding.imageCardView
-
+            binding.pos = position
             binding.executePendingBindings()
         }
 
@@ -198,21 +177,23 @@ class MessageAdapter @Inject constructor(
 
     }
 
-    class ReceiveBothViewHolder(
+    private class ReceiveBothViewHolder(
         private val binding: ReceiveFromBothBinding,
     ) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(
             data: Message,
-            onMessageClickListener: OnMessageClickListener,
-            onImageClickListener: OnMessageClickListener
+            OnMessageClickListener: OnMessageClickListener,
+            onImageClickListener: OnMessageClickListener,
+            position: Int
 
         ) {
             binding.data = data
-            binding.onMessageClickListener = onMessageClickListener
+            binding.onMessageClickListener = OnMessageClickListener
             binding.onImageClickListener = onImageClickListener
             binding.view = binding.imageCardView
+            binding.pos = position
             binding.executePendingBindings()
         }
 
@@ -229,8 +210,9 @@ class MessageAdapter @Inject constructor(
 
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position)
-        when (item.senderUid == myId) {
-            // sender
+        item.isSender = item.senderUid == myId
+
+        when (item.isSender) {
             true -> {
                 return if (item.message != null && item.imageMessageUrl == null) {
                     ITEM_SENDER_TEXT
@@ -275,28 +257,37 @@ class MessageAdapter @Inject constructor(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, model: Message) {
         when (holder) {
-            is SendTextViewHolder -> holder.bind(model, onMessageClickListener)
-            is SendImageViewHolder -> holder.bind(model, onImageClickListener)
+            is SendTextViewHolder -> holder.bind(model, onMessageClickListener, position)
+            is SendImageViewHolder -> holder.bind(model, onImageClickListener, position)
             is SendToBothViewModel -> holder.bind(
                 model,
+                onMessageClickListener,
                 onImageClickListener,
-                onMessageClickListener
+                position
             )
 
-            is ReceiveTextViewHolder -> holder.bind(model, onMessageClickListener)
-            is ReceiveImageViewHolder -> holder.bind(model, onImageClickListener)
+            is ReceiveTextViewHolder -> holder.bind(model, onMessageClickListener, position)
+            is ReceiveImageViewHolder -> holder.bind(model, onImageClickListener, position)
             is ReceiveBothViewHolder -> holder.bind(
                 model,
                 onMessageClickListener,
-                onImageClickListener
+                onImageClickListener,
+                position
             )
 
         }
 
     }
 
-    class OnMessageClickListener(private val onClickListener: (message: Message, v: View) -> Boolean) {
-        fun onClick(message: Message, v: View) = onClickListener(message, v)
+    class OnMessageClickListener(
+        private val onClickListener: (message: Message, v: View, position: Int) -> Unit,
+        private val onLongClickListener: (message: Message, v: View, position: Int) -> Boolean
+    ) {
+        fun onClick(message: Message, v: View, position: Int) =
+            onClickListener(message, v, position)
+
+        fun onLongClick(message: Message, v: View, position: Int) =
+            onLongClickListener(message, v, position)
     }
 
     fun setItemSentStatus(pos: Int, status: Boolean) {
@@ -309,5 +300,23 @@ class MessageAdapter @Inject constructor(
 
     }
 
+    fun setItemChecked(pos: Int, isChecked: Boolean) {
+        try {
+            if (pos == oldPos) {
+                getItem(pos).isChecked = !getItem(pos).isChecked
+            } else {
+                if (oldPos != -1) {
+                    getItem(oldPos).isChecked = false
+                }
+                getItem(pos).isChecked = true
+            }
+            notifyItemChanged(pos)
+            notifyItemChanged(oldPos)
+            oldPos = pos
 
+        } catch (e: Exception) {
+            Log.i(TAG, "setItemChecked: ${e.message!!}")
+        }
+
+    }
 }

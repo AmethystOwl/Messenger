@@ -1,9 +1,13 @@
 package com.example.messenger
 
+import android.graphics.Color
+import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
+import com.example.messenger.model.Message
 
 class BindingAdapter {
     companion object {
@@ -83,6 +87,47 @@ class BindingAdapter {
 
         }
 
+        @JvmStatic
+        @BindingAdapter("bindImage")
+        fun ImageView.bindImage(imageUrl: String?) {
+            imageUrl?.let {
+                Glide.with(context)
+                    .load(imageUrl)
+                    .into(this)
+            }
+        }
+
+        @JvmStatic
+        @BindingAdapter(value = ["isChecked", "isSender"], requireAll = true)
+        fun CardView.setCardCheckedBk(isChecked: Boolean, isSender: Boolean) {
+            setCardBackgroundColor(
+                when (isSender) {
+                    true -> {
+                        when (isChecked) {
+                            true -> Color.rgb(153, 51, 255)
+                            false -> Color.rgb(255, 102, 255)
+                        }
+                    }
+                    false -> {
+                        when (isChecked) {
+                            true -> Color.DKGRAY
+                            false -> Color.GRAY
+                        }
+                    }
+                }
+
+            )
+
+        }
+
+        @JvmStatic
+        @BindingAdapter("messageTimeVisibility")
+        fun TextView.messageTimeVisibility(isVisible: Boolean) {
+            visibility = when (isVisible) {
+                true -> View.VISIBLE
+                false -> View.GONE
+            }
+        }
 
         @JvmStatic
         @BindingAdapter("setMessageStatus")
@@ -148,6 +193,40 @@ class BindingAdapter {
             }
 
         }
+
+
+        @JvmStatic
+        @BindingAdapter(
+            value = ["selectedMessage", "senderFirstName", "senderLastName"],
+            requireAll = true
+        )
+        fun TextView.bindSelectedMessageName(
+            selectedMessage: Message?,
+            senderFirstName: String?,
+            senderLastName: String?
+        ) {
+            when (selectedMessage?.isSender) {
+                true -> {
+                    text = context.resources.getString(R.string.you)
+                }
+                false -> {
+                    text = "$senderFirstName $senderLastName"
+                }
+            }
+
+        }
+
+        @JvmStatic
+        @BindingAdapter("bindSelectedMessageImage")
+        fun ImageView.bindSelectedMessageImage(message: Message?) {
+            message?.imageMessageUrl?.let {
+                Glide.with(context)
+                    .load(message.imageMessageUrl)
+                    .into(this)
+            }
+
+        }
+
     }
 }
 

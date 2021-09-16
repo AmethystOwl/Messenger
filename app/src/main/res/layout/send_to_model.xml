@@ -6,24 +6,22 @@
     <data>
 
         <variable
-            name="onImageClickListener"
-            type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
-
-        <variable
-            name="onMessageClickListener"
+            name="onMessageLongClickListener"
             type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
 
         <variable
             name="data"
             type="com.example.messenger.model.Message" />
 
-        <variable
-            name="position"
-            type="Integer" />
 
         <variable
             name="view"
             type="android.view.View" />
+
+
+        <variable
+            name="pos"
+            type="Integer" />
 
     </data>
 
@@ -32,7 +30,7 @@
         android:id="@+id/parentRelativeLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#2E2E2E"
+        android:background="#000000"
         android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
@@ -50,10 +48,10 @@
         <RelativeLayout
             android:id="@+id/relativeLayout"
             android:layout_width="wrap_content"
-            android:layout_marginEnd="10dp"
             android:layout_height="wrap_content"
             android:layout_below="@id/dateTextView"
-            android:layout_alignParentEnd="true">
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp">
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/messageCardView"
@@ -62,19 +60,20 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:minHeight="48dp"
-                android:onLongClick="@{() -> onMessageClickListener.onClick(data,view)}"
+                android:onClick="@{() -> onMessageLongClickListener.onClick(data,view,pos)}"
+                android:onLongClick="@{() -> onMessageLongClickListener.onLongClick(data,view,pos)}"
                 app:cardBackgroundColor="#774df2"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="0dp"
                 app:cardPreventCornerOverlap="true"
-                app:cardUseCompatPadding="true">
+                app:cardUseCompatPadding="true"
+                app:isChecked="@{data.checked}"
+                app:isSender="@{data.sender}">
 
                 <LinearLayout
                     android:id="@+id/linearLayout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="?attr/selectableItemBackground"
-                    android:gravity="end"
                     android:orientation="vertical">
 
 
@@ -95,17 +94,19 @@
             </androidx.cardview.widget.CardView>
 
         </RelativeLayout>
+
         <TextView
             android:id="@+id/messageTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/relativeLayout"
-            android:layout_marginEnd="5dp"
-
-            android:layout_toStartOf="@id/messageStatus"
+            android:layout_below="@id/relativeLayout"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="20dp"
             android:textColor="#ffffff"
             android:textSize="12sp"
             app:getTimeFromTimeStamp="@{data.timestamp}"
+            app:messageTimeVisibility="@{data.checked}"
             tools:text="10:00 AM" />
 
         <de.hdodenhof.circleimageview.CircleImageView

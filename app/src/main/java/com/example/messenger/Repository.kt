@@ -8,25 +8,55 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
-@ExperimentalCoroutinesApi
+
+@OptIn(ExperimentalCoroutinesApi::class)
 class Repository @Inject constructor(
     private val auth: FirebaseAuth,
     private val fireStore: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) {
     private val TAG = "Repository"
+    suspend fun observeDocChanges(friendUid: String) = callbackFlow<DataState<Int>> {
+        fireStore.collection(Constants.USER_COLLECTION).document(auth.uid!!)
+            .collection(Constants.USER_INBOX_COLLECTION)
+            .document(friendUid)
+            .collection(Constants.USER_CONVERSATION_COLLECTION)
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    trySend(DataState.Error(error))
+                    cancel("Error occurred", error)
+                }
+                for (change in value?.documentChanges!!) {
+                    when (change.type) {
+                        DocumentChange.Type.ADDED -> {
+                            trySend(DataState.Success(Constants.DOCUMENT_ADDED))
+                        }
+                        DocumentChange.Type.MODIFIED -> {
+                            trySend(DataState.Success(Constants.DOCUMENT_MODIFIED))
+                        }
+                        DocumentChange.Type.REMOVED -> {
+                            trySend(DataState.Success(Constants.DOCUMENT_REMOVED))
+                        }
+                    }
+                }
+
+            }
+        awaitClose()
+    }
 
     // TODO : use close function
     suspend fun register(userProfile: UserProfile, password: String) =
