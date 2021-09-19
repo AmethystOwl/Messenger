@@ -40,11 +40,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
                 R.id.loginFragment, R.id.registerFragment, R.id.chatsFragment, R.id.friendsFragment
             )
         )
-        /*      NavigationUI.setupActionBarWithNavController(
-                  this,
-                  navController,
-                  appBarConfiguration
-              )*/
         setupActionBarWithNavController(navController, appBarConfiguration)
 
         // TODO : save things in local db...
@@ -65,6 +60,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
         if (EasyPermissions.permissionPermanentlyDenied(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
+            ) || EasyPermissions.permissionPermanentlyDenied(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
             )
         ) {
             AppSettingsDialog.Builder(this).setTitle(getString(R.string.permission_required))

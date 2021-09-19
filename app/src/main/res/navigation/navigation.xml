@@ -114,6 +114,6 @@
         android:id="@+id/viewImageFragment"
         android:name="com.example.messenger.chat.viewImage.ViewImageFragment"
         android:label="ViewImageFragment"
-        tools:layout="@layout/fragment_view_image" />
+        tools:layout="@layout/view_image_fragment" />
 
 </navigation>

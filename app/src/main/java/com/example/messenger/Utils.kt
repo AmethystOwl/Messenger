@@ -1,5 +1,6 @@
 package com.example.messenger
 
+import android.os.Build
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import java.text.SimpleDateFormat
@@ -78,6 +79,13 @@ open class Utils {
             ) + ' ' +
                     calender.get(Calendar.DAY_OF_MONTH).toString() + ", " +
                     calender.get(Calendar.YEAR).toString()
+        }
+
+
+        inline fun <T> isSdkVer29Up(onSdk29Up: () -> T): T? {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                onSdk29Up()
+            } else null
         }
     }
 }

@@ -31,8 +31,9 @@ object Constants {
     const val FRIEND_ADDITION_FAIL = -701
     const val FRIEND_ADDITION_CANCEL = -702
 
-    const val CAMERA_REQ_CODE = 1021
-    const val EXTERNAL_REQ_CODE = 2021
+    const val CAMERA_PERMISSION_REQ_CODE = 1001
+    const val READ_EXTERNAL_PERMISSION_REQ_CODE = 1002
+    const val WRITE_EXTERNAL_PERMISSION_REQ_CODE = 1003
 
     const val IMAGE_UPLOAD_SUCCESSFUL = 8000
 

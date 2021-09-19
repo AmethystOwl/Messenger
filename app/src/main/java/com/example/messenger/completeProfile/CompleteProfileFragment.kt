@@ -159,7 +159,7 @@ class CompleteProfileFragment : Fragment() {
 
     }
 
-    @AfterPermissionGranted(Constants.EXTERNAL_REQ_CODE)
+    @AfterPermissionGranted(Constants.READ_EXTERNAL_PERMISSION_REQ_CODE)
     fun openExternalStorage() {
         if (EasyPermissions.hasPermissions(
                 requireContext(),
@@ -170,8 +170,8 @@ class CompleteProfileFragment : Fragment() {
         } else {
             EasyPermissions.requestPermissions(
                 this,
-                getString(R.string.storage_permission_required),
-                Constants.EXTERNAL_REQ_CODE,
+                getString(R.string.storage_read_permission_required),
+                Constants.READ_EXTERNAL_PERMISSION_REQ_CODE,
                 Manifest.permission.READ_EXTERNAL_STORAGE
             )
         }
@@ -199,7 +199,7 @@ class CompleteProfileFragment : Fragment() {
     }
 
 
-    @AfterPermissionGranted(Constants.CAMERA_REQ_CODE)
+    @AfterPermissionGranted(Constants.CAMERA_PERMISSION_REQ_CODE)
     fun openCamera() {
         if (EasyPermissions.hasPermissions(
                 requireContext(),

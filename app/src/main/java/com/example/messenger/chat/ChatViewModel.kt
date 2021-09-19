@@ -1,5 +1,6 @@
 package com.example.messenger.chat
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -38,6 +39,9 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
 
     private var _documentChanges = MutableLiveData<DataState<Int?>>()
     val documentChanges: LiveData<DataState<Int?>> get() = _documentChanges
+
+    private var _imageDownloadState = MutableLiveData<DataState<String?>>()
+    val imageDownloadState: LiveData<DataState<String?>> get() = _imageDownloadState
 
     init {
         _selectedMessagePosition.value = 0
@@ -84,5 +88,17 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
                 _documentChanges.value = it
             }
         }
+    }
+
+    fun saveImage(imageUrl: String, context: Context) {
+        viewModelScope.launch {
+            repo.saveImage(imageUrl, context).collect {
+                _imageDownloadState.value = it
+            }
+        }
+    }
+
+    fun doneObservingDownloadState() {
+        _imageDownloadState.value = DataState.Empty
     }
 }

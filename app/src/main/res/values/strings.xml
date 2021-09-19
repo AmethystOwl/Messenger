@@ -33,8 +33,8 @@
     <string name="country">Country</string>
     <string name="browse">Browse</string>
     <string name="profile_picture_imageview">Profile Picture Imageview</string>
-
-    <string name="storage_permission_required">Storage access is required to pick a profile picture</string>
+    <string name="storage_write_permission_required">Storage write access is required save image</string>
+    <string name="storage_read_permission_required">Storage read access is required to pick a profile picture</string>
     <string name="camera_permission_required">Camera access is required to take a profile picture</string>
     <string name="ok">OK</string>
     <string name="permission_required">Permission Required</string>

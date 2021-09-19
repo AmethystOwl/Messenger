@@ -1,6 +1,11 @@
 package com.example.messenger
 
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
 import com.example.messenger.model.Message
 import com.example.messenger.model.UserProfile
@@ -563,6 +568,7 @@ class Repository @Inject constructor(
                 if (!task.isSuccessful) {
                     task.exception?.let {
                         trySend(DataState.Error(it))
+                        close(it)
                     }
                 }
                 fileRef.downloadUrl
@@ -595,9 +601,13 @@ class Repository @Inject constructor(
                                                         }
                                                         it.isCanceled -> {
                                                             trySend(DataState.Canceled)
+                                                            close()
+
                                                         }
                                                         it.exception != null -> {
                                                             trySend(DataState.Error(it.exception!!))
+                                                            close(it.exception)
+
                                                         }
                                                     }
                                                 }
@@ -610,8 +620,55 @@ class Repository @Inject constructor(
                     }
                 }
             }
-            awaitClose()
+            awaitClose { cancel() }
         }
+    }.flowOn(Dispatchers.IO)
+
+    suspend fun saveImage(imageUrl: String, context: Context) = callbackFlow<DataState<String>> {
+        val fileRef = storage.getReferenceFromUrl(imageUrl)
+        val ONE_MEGABYTE: Long = 1024 * 1024
+
+
+        fileRef.getBytes(ONE_MEGABYTE)
+            .addOnCanceledListener {
+                trySend(DataState.Canceled)
+                close()
+            }.addOnFailureListener {
+                trySend(DataState.Error(it))
+                close(it)
+            }.addOnSuccessListener {
+                val bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+
+                val imageCollection = Utils.isSdkVer29Up {
+                    MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                } ?: MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, fileRef.name)
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    put(MediaStore.Images.Media.WIDTH, bitmap.width)
+                    put(MediaStore.Images.Media.HEIGHT, bitmap.height)
+                }
+                try {
+                    context.contentResolver.insert(imageCollection, contentValues)?.also { uri ->
+                        context.contentResolver.openOutputStream(uri).use { outputStream ->
+                            try {
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                                trySend(DataState.Success(uri.path!!))
+
+                            } catch (e: Exception) {
+                                trySend(DataState.Error(e))
+                                close(e)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    trySend(DataState.Error(e))
+                    close(e)
+                }
+            }
+
+        awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
 
 

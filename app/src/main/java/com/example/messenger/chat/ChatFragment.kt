@@ -135,7 +135,7 @@ class ChatFragment : Fragment() {
 
                 }
                 is DataState.Success -> {
-                    // TODO : it works but it's not the desired result, it goes to bottom then scrolls back..
+                    // TODO : it works but it's not the desired result, it goes to bottom then scrolls back, also not very accurate
                     if (docChangesDataState.data?.equals(Constants.DOCUMENT_ADDED)!!) {
                         if (lastPos == -1) {
                             binding.chatRecyclerview.scrollToPosition(0)
@@ -230,7 +230,6 @@ class ChatFragment : Fragment() {
             chatViewModel.imageMessageState.observe(viewLifecycleOwner) { imageMessageState ->
                 when (imageMessageState) {
                     is DataState.Loading -> {
-                        // sending to server
                         binding.chatRecyclerview.scrollToPosition(0)
 
                     }
@@ -405,7 +404,7 @@ class ChatFragment : Fragment() {
     )
 
 
-    // TODO : use blurred image while image downloads(stackoverflow)
+    // TODO : use blurred image while image loads(stackoverflow)
     private fun setupAdapter() {
         val query = sharedViewModel.getDefaultMessageQuery(friendUid!!)
         val option =
