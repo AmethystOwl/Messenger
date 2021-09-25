@@ -63,6 +63,9 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks,
             ) || EasyPermissions.permissionPermanentlyDenied(
                 this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) || EasyPermissions.permissionPermanentlyDenied(
+                this,
+                Manifest.permission.RECORD_AUDIO
             )
         ) {
             AppSettingsDialog.Builder(this).setTitle(getString(R.string.permission_required))

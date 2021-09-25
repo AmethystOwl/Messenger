@@ -1,13 +1,14 @@
 package com.example.messenger.chat
 
+import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +20,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.devlomi.record_view.OnRecordListener
+import com.devlomi.record_view.RecordPermissionHandler
 import com.example.messenger.*
 import com.example.messenger.adapter.MessageAdapter
 import com.example.messenger.databinding.ChatFragmentBinding
@@ -27,13 +30,13 @@ import com.example.messenger.model.UserProfile
 import com.firebase.ui.common.ChangeEventType
 import com.firebase.ui.firestore.ChangeEventListener
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
-import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import me.piruin.quickaction.ActionItem
 import me.piruin.quickaction.QuickAction
+import pub.devrel.easypermissions.EasyPermissions
 
 
 @AndroidEntryPoint
@@ -53,8 +56,9 @@ class ChatFragment : Fragment() {
     private val sharedViewModel: SharedViewModel by viewModels()
 
     private var mainActivity: MainActivity? = null
+    private var _binding: ChatFragmentBinding? = null
 
-    private lateinit var binding: ChatFragmentBinding
+    private val binding get() = _binding!!
 
     private lateinit var myId: String
     private var selectedMsg: Message? = null
@@ -68,54 +72,118 @@ class ChatFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
                 if (it.data?.data != null) {
-                    val message = Message(
-                        message = if (binding.sendTextEditText.text.trim()
-                                .isEmpty()
-                        ) null else binding.sendTextEditText.text.toString(),
-                        senderUid = myId,
-                        profilePictureUrl = currentUserProfile?.profilePictureUrl,
-                    )
+                    //  val message = Message(
+                    //     message = if (binding.sendTextEditText.text.trim()
+                    //            .isEmpty()
+                    //    ) null else binding.sendTextEditText.text.toString(),
+                    //   senderUid = myId,
+                    //   profilePictureUrl = currentUserProfile?.profilePictureUrl,
+                    //)
                     val imageUri = it.data?.data!!
-                    chatViewModel.sendImageMessage(message, imageUri, friendUid!!)
-                    binding.sendTextEditText.text.clear()
+                    //    chatViewModel.sendImageMessage(message, imageUri, friendUid!!)
+                    //   binding.sendTextEditText.text.clear()
 
                 }
             }
         }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = ChatFragmentBinding.inflate(inflater, container, false)
+        _binding = ChatFragmentBinding.inflate(inflater, container, false)
         binding.viewModel = chatViewModel
         binding.lifecycleOwner = viewLifecycleOwner
-        myId = sharedViewModel.getCurrentUser()?.uid!!
-        friendUid = ChatFragmentArgs.fromBundle(requireArguments()).friendUId
-        if (binding.sendTextEditText.text.isEmpty()) {
-            setSendButtonState(false)
-        }
 
-        binding.sendTextEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, before: Int, cound: Int) {
+        binding.recordButton.setRecordView(binding.recordView)
 
+
+        binding.recordView.setRecordPermissionHandler(RecordPermissionHandler {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                return@RecordPermissionHandler true
+            }
+            if (hasAudioRecordPermission()) {
+                true
+            } else {
+                requestAudioRecordPermission()
+                false
             }
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s?.trim()?.isNotEmpty()!!) {
-                    setSendButtonState(true)
-                } else {
-                    setSendButtonState(false)
-
-                }
-            }
-
-            override fun afterTextChanged(s: Editable?) {
-
-            }
 
         })
+        binding.recordButton.isListenForRecord = true
+        binding.recordView.setOnRecordListener(object : OnRecordListener {
 
+            override fun onStart() {
+                binding.messageLayout.visibility = View.GONE
+                binding.recordView.visibility = View.VISIBLE
+                val arr: IntArray? = null
+                binding.recordButton.getLocationOnScreen(arr)
+                Log.i(TAG, "onLessThanSecond: $arr!!")
+
+            }
+
+            override fun onCancel() {
+                binding.recordView.visibility = View.GONE
+                binding.messageLayout.visibility = View.VISIBLE
+                val arr: IntArray? = null
+                binding.recordButton.getLocationOnScreen(arr)
+                Log.i(TAG, "onLessThanSecond: $arr!!")
+
+            }
+
+            override fun onFinish(recordTime: Long, limitReached: Boolean) {
+                binding.recordView.visibility = View.GONE
+                binding.messageLayout.visibility = View.VISIBLE
+
+                val arr: IntArray? = null
+                binding.recordButton.getLocationOnScreen(arr)
+                Log.i(TAG, "onLessThanSecond: $arr!!")
+
+            }
+
+            override fun onLessThanSecond() {
+                binding.recordView.visibility = View.GONE
+                binding.messageLayout.visibility = View.VISIBLE
+
+                val arr: IntArray? = null
+                binding.recordButton.getLocationOnScreen(arr)
+                Log.i(TAG, "onLessThanSecond: $arr!!")
+            }
+
+
+        })
+        myId = sharedViewModel.getCurrentUser()?.uid!!
+        friendUid = ChatFragmentArgs.fromBundle(requireArguments()).friendUId
+        /*  if (binding.sendTextEditText.text.trim().isEmpty()) {
+              binding.fab.background =
+                  AppCompatResources.getDrawable(requireContext(), R.drawable.ic_baseline_mic_24)
+          } else {
+              binding.fab.background =
+                  AppCompatResources.getDrawable(requireContext(), R.drawable.ic_baseline_send_24)
+          }
+
+          binding.sendTextEditText.addTextChangedListener(object : TextWatcher {
+              override fun beforeTextChanged(s: CharSequence?, start: Int, before: Int, cound: Int) {
+
+              }
+
+              override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                  if (s?.trim()?.isEmpty()!!) {
+                      binding.fab.setImageResource(R.drawable.ic_baseline_mic_24)
+                  } else {
+                      binding.fab.setImageResource(R.drawable.ic_baseline_send_24)
+
+                  }
+              }
+
+              override fun afterTextChanged(s: Editable?) {
+
+              }
+
+          })
+  */
 
         setupAdapter()
 
@@ -259,39 +327,81 @@ class ChatFragment : Fragment() {
                     }
                 }
             }
-
-
-            binding.sendImageButton.setOnClickListener {
-                if (friendUid != null) {
-                    val message = Message(
-                        message = if (binding.sendTextEditText.text.trim()
-                                .isEmpty()
-                        ) null else binding.sendTextEditText.text.toString(),
-                        senderUid = myId,
-                        profilePictureUrl = currentUserProfile?.profilePictureUrl,
-
-                        )
-                    chatViewModel.sendMessage(message, friendUid!!)
-                    binding.sendTextEditText.text.clear()
-                }
-            }
-            binding.selectImageButton.setOnClickListener {
-                ImagePicker.with(this).createIntent { imageIntent ->
-                    getImage.launch(imageIntent)
-                }
-
-
-            }
         }
 
+        /*     binding.fab.setOnClickListener {
+                 if (binding.sendTextEditText.text.trim()
+                         .isNotEmpty()
+                 ) {
+                     // send message
+                     if (friendUid != null) {
+                         val message = Message(
+                             message = binding.sendTextEditText.text.toString(),
+                             senderUid = myId,
+                             profilePictureUrl = currentUserProfile?.profilePictureUrl,
+
+                             )
+                         chatViewModel.sendMessage(message, friendUid!!)
+                         binding.sendTextEditText.text.clear()
+                     }
+                 }
+
+             }
+             binding.selectImageButton.setOnClickListener {
+                 ImagePicker.with(this).createIntent { imageIntent ->
+                     getImage.launch(imageIntent)
+                 }
+
+
+             }
+         }
+
+         binding.fab.setOnTouchListener { v, event ->
+             if (binding.sendTextEditText.text.trim().isEmpty()) {
+                 when (event.action) {
+                     MotionEvent.ACTION_DOWN -> {
+                         if (!hasAudioRecordPermission()) {
+                             requestAudioRecordPermission()
+                         } else {
+                             // TODO : Start recording
+                           //  var recorder = AudioRecord()
+
+                         }
+                     }
+                     MotionEvent.ACTION_UP -> {
+                         // TODO : Stop recording and send
+                     }
+                     MotionEvent.ACTION_CANCEL -> {
+                         // TODO : Cancel
+                     }
+                 }
+
+             }
+             false
+         }
+ */
         return binding.root
     }
 
 
+    private fun requestAudioRecordPermission() {
+        if (!hasAudioRecordPermission()) {
+            EasyPermissions.requestPermissions(
+                this,
+                getString(R.string.record_audio_permission_required),
+                Constants.AUDIO_RECORD_PERMISSION_REQ_CODE,
+                Manifest.permission.RECORD_AUDIO
+            )
+        }
+
+    }
+
+    private fun hasAudioRecordPermission() =
+        EasyPermissions.hasPermissions(requireContext(), Manifest.permission.RECORD_AUDIO)
+
     val onMessageClickListener = MessageAdapter.OnMessageClickListener(
         onClickListener = object : (Message, View, Int) -> Unit {
             override fun invoke(message: Message, v: View, pos: Int) {
-                Log.i(TAG, "invoke message: clicked")
                 messageAdapter.setItemChecked(pos, true)
                 if (pos == 0) {
                     binding.chatRecyclerview.scrollToPosition(0)
@@ -319,11 +429,12 @@ class ChatFragment : Fragment() {
                             val clipboard =
                                 requireActivity().getSystemService(Service.CLIPBOARD_SERVICE) as ClipboardManager
                             if (selectedMsg?.message != null) {
-                                val clipData = ClipData.newPlainText("uuh", selectedMsg?.message)
+                                val clipData =
+                                    ClipData.newPlainText("copyMessage", selectedMsg?.message)
                                 clipboard.setPrimaryClip(clipData)
                                 Toast.makeText(
                                     requireContext(),
-                                    "Message copied",
+                                    "Message copied to Clipboard",
                                     Toast.LENGTH_SHORT
                                 )
                                     .show()
@@ -343,63 +454,28 @@ class ChatFragment : Fragment() {
 
 
     )
+    val onImageClickListener = MessageAdapter.OnMessageClickListener(onClickListener = object :
+            (Message, View, Int) -> Unit {
+        override fun invoke(message: Message, v: View, pos: Int) {
+            if (message.imageMessageUrl != null) {
+                val test =
+                    (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+                chatViewModel.setSelectedMessage(message, test)
 
-    // TODO : QuickAction crashes, find alternatives..
-    val onImageClickListener = MessageAdapter.OnMessageClickListener(
-        onClickListener = object : (Message, View, Int) -> Unit {
-            override fun invoke(message: Message, v: View, pos: Int) {
-                Log.i(TAG, "invoke image: clicked")
-                // TODO : open image with save etc..
-                //        at the top left: Sender name, date below it
-                //        at the top right: option menu with save & delete options
-                if (message.imageMessageUrl != null) {
-                    val test =
-                        (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-                    chatViewModel.setSelectedMessage(message, test)
-
-                    findNavController().navigate(ChatFragmentDirections.actionChatFragmentToImageFragment())
-                }
-
-            }
-        }, onLongClickListener = object : (Message, View, Int) -> Boolean {
-            override fun invoke(message: Message, v: View, pos: Int): Boolean {
-                Log.i(TAG, "invoke image: longClicked")
-                /*   val imageQuickAction = QuickAction(requireContext(), QuickAction.HORIZONTAL)
-                   imageQuickAction.setColor(Color.DKGRAY)
-                   imageQuickAction.setTextColor(Color.WHITE)
-                   imageQuickAction.setAnimStyle(QuickAction.Animation.GROW_FROM_CENTER)
-                   imageQuickAction.setEnabledDivider(true)
-                   val copyAction =
-                       ActionItem(
-                           ACTION_SAVE_IMAGE,
-                           getString(R.string.save_image)
-                       )
-                   val deleteAction =
-                       ActionItem(
-                           ACTION_DELETE_IMAGE,
-                           getString(R.string.delete_message)
-                       )
-                   imageQuickAction.addActionItem(copyAction, deleteAction)
-                   imageQuickAction.show(v)
-                   imageQuickAction.setOnActionItemClickListener {
-                       when (it.actionId) {
-                           ACTION_SAVE_IMAGE -> {
-
-                           }
-                           ACTION_DELETE_IMAGE -> {
-
-                           }
-                       }
-                   }*/
-
-                messageAdapter.setItemChecked(pos, true)
-                if (pos == 0) {
-                    binding.chatRecyclerview.scrollToPosition(0)
-                }
-                return true
+                findNavController().navigate(ChatFragmentDirections.actionChatFragmentToImageFragment())
             }
 
         }
+    }, onLongClickListener = object : (Message, View, Int) -> Boolean {
+        override fun invoke(message: Message, v: View, pos: Int): Boolean {
+            messageAdapter.setItemChecked(pos, true)
+            if (pos == 0) {
+                binding.chatRecyclerview.scrollToPosition(0)
+            }
+            return true
+        }
+
+    }
 
     )
 
@@ -413,7 +489,8 @@ class ChatFragment : Fragment() {
                 .setQuery(query, Message::class.java)
                 .build()
 
-        messageAdapter = MessageAdapter(option, onMessageClickListener, onImageClickListener, myId)
+        messageAdapter =
+            MessageAdapter(option, onMessageClickListener, onImageClickListener, myId)
         val linearLayoutManager = LinearLayoutManager(requireContext())
         linearLayoutManager.reverseLayout = true
         linearLayoutManager.stackFromEnd = true
@@ -421,6 +498,7 @@ class ChatFragment : Fragment() {
         linearLayoutManager.orientation = LinearLayoutManager.VERTICAL
         // added to prevent "Inconsistency detected. Invalid view holder adapter position"
         binding.chatRecyclerview.itemAnimator = null
+        // if this is removed, it doesn't scroll to the bottom for some reason
         messageAdapter.snapshots.addChangeEventListener(object : ChangeEventListener {
             override fun onChildChanged(
                 type: ChangeEventType,
@@ -432,7 +510,6 @@ class ChatFragment : Fragment() {
             }
 
             override fun onDataChanged() {
-                //   binding.chatRecyclerview.scrollToPosition(0)
 
             }
 
@@ -443,30 +520,13 @@ class ChatFragment : Fragment() {
         })
 
         binding.chatRecyclerview.layoutManager = linearLayoutManager
-        //  messageAdapter.stateRestorationPolicy = RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY
-
         binding.chatRecyclerview.adapter = messageAdapter
         binding.chatRecyclerview.setHasFixedSize(true)
-        // binding.chatRecyclerview.scrollToPosition(0)
     }
 
-    private fun setSendButtonState(isEnabled: Boolean) {
-        when {
-            isEnabled -> {
-                binding.sendImageButton.setImageResource(R.drawable.ic_baseline_send_blue_48)
-            }
-            else -> {
-                binding.sendImageButton.setImageResource(R.drawable.ic_baseline_send_48)
-
-            }
-        }
-        binding.sendImageButton.isEnabled = isEnabled
-
-    }
 
     override fun onStart() {
         super.onStart()
-        Log.i(TAG, "onStart: ")
         chatViewModel.setSelectedMessage(null, null)
         mainActivity = activity as MainActivity
         messageAdapter.startListening()
@@ -475,10 +535,15 @@ class ChatFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        Log.i(TAG, "onStop: ")
         messageAdapter.stopListening()
         mainActivity = null
+        currentUserProfile = null
+        selectedMsg = null
+
     }
 
-
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

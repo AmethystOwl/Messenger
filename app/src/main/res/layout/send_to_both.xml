@@ -49,7 +49,7 @@
 
 
         <RelativeLayout
-            android:id="@+id/relativeLayout"
+            android:id="@+id/topContentRelativeLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/dateTextView"
@@ -120,7 +120,7 @@
             android:id="@+id/messageTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/relativeLayout"
+            android:layout_below="@id/topContentRelativeLayout"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="20dp"
             android:textColor="#ffffff"
@@ -134,8 +134,8 @@
             android:id="@+id/messageStatus"
             android:layout_width="15dp"
             android:layout_height="15dp"
-            android:layout_alignBottom="@id/relativeLayout"
-            android:layout_toStartOf="@id/relativeLayout"
+            android:layout_alignBottom="@id/topContentRelativeLayout"
+            android:layout_toStartOf="@id/topContentRelativeLayout"
             android:src="@drawable/ic_baseline_access_time_white_15"
             app:setMessageStatus="@{data.isSent}"
             tools:src="@drawable/ic_baseline_access_time_white_15" />

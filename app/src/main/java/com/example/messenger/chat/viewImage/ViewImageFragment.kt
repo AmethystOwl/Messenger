@@ -26,6 +26,7 @@ class ViewImageFragment : Fragment() {
     private var _binding: ViewImageFragmentBinding? = null
     private val binding get() = _binding!!
     private var imageUrl: String? = null
+    private var enableImageDownloadMenuItem: Boolean = true
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -44,9 +45,11 @@ class ViewImageFragment : Fragment() {
 
         viewModel.imageDownloadState.observe(viewLifecycleOwner) { imageDownloadState ->
             when (imageDownloadState) {
-                // TODO : disable button
-                is DataState.Progress -> {
-                    Log.i(TAG, "onCreateView: ${imageDownloadState.data!!}")
+                is DataState.Loading -> {
+                    enableImageDownloadMenuItem = false
+                    activity?.invalidateOptionsMenu()
+
+
                 }
                 is DataState.Success -> {
                     Log.i(TAG, "onCreateView: ${imageDownloadState.data!!}")
@@ -56,6 +59,9 @@ class ViewImageFragment : Fragment() {
                         Toast.LENGTH_LONG
                     ).show()
                     viewModel.doneObservingDownloadState()
+                    enableImageDownloadMenuItem = true
+                    activity?.invalidateOptionsMenu()
+
 
                 }
                 is DataState.Canceled -> {
@@ -65,6 +71,9 @@ class ViewImageFragment : Fragment() {
                         Toast.LENGTH_SHORT
                     ).show()
                     viewModel.doneObservingDownloadState()
+                    enableImageDownloadMenuItem = true
+                    activity?.invalidateOptionsMenu()
+
 
                 }
 
@@ -76,9 +85,15 @@ class ViewImageFragment : Fragment() {
                     ).show()
                     Log.i(TAG, "onCreateView: ${imageDownloadState.exception.message!!}")
                     viewModel.doneObservingDownloadState()
+                    enableImageDownloadMenuItem = true
+                    activity?.invalidateOptionsMenu()
+
 
                 }
 
+                else -> {
+
+                }
             }
         }
         setHasOptionsMenu(true)
@@ -89,6 +104,25 @@ class ViewImageFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.image_menu, menu)
     }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+
+        menu.findItem(R.id.saveImageMenuItem).isEnabled = enableImageDownloadMenuItem
+        when (enableImageDownloadMenuItem) {
+            true -> {
+                menu.findItem(R.id.saveImageMenuItem)
+                    .setIcon(R.drawable.ic_baseline_file_download_24)
+            }
+            false -> {
+                menu.findItem(R.id.saveImageMenuItem)
+                    .setIcon(R.drawable.ic_baseline_file_download_grey_24)
+
+            }
+        }
+
+    }
+
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
@@ -106,12 +140,8 @@ class ViewImageFragment : Fragment() {
 
                     } else {
                         requestWritePermission()
-
                     }
                 }
-            }
-            else -> {
-
             }
         }
         return super.onOptionsItemSelected(item)
@@ -135,5 +165,8 @@ class ViewImageFragment : Fragment() {
         )
     }
 
-
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
 }

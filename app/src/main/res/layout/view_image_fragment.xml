@@ -29,7 +29,7 @@
             tools:src="@drawable/ic_avatar_foreground" />
 
         <RelativeLayout
-            android:id="@+id/relativeLayout"
+            android:id="@+id/topContentRelativeLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:background="#B35A5A5A"

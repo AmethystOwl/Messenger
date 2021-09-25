@@ -43,7 +43,7 @@ class Repository @Inject constructor(
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     trySend(DataState.Error(error))
-                    cancel("Error occurred", error)
+                    close()
                 }
                 for (change in value?.documentChanges!!) {
                     when (change.type) {
@@ -60,17 +60,15 @@ class Repository @Inject constructor(
                 }
 
             }
-        awaitClose()
+        awaitClose { cancel() }
     }
 
-    // TODO : use close function
     suspend fun register(userProfile: UserProfile, password: String) =
         callbackFlow<DataState<UserProfile>?> {
             trySend(DataState.Loading)
             auth.createUserWithEmailAndPassword(userProfile.email!!, password)
                 .addOnCompleteListener {
                     if (it.isComplete) {
-                        Log.i(TAG, "register: isComplete")
                         when {
                             it.isSuccessful -> {
                                 if (userProfile.fname != null && userProfile.lname != null) {
@@ -96,41 +94,42 @@ class Repository @Inject constructor(
                                 }
 
 
-                                Log.i(TAG, "register: isSuccessful")
                                 val doc = fireStore.collection(Constants.USER_COLLECTION)
                                     .document(auth.currentUser?.uid!!)
                                 doc.set(userProfile).addOnCompleteListener { docTask ->
                                     when {
                                         docTask.isSuccessful -> {
-                                            Log.i(TAG, "register doc: isSuccessful")
                                             trySend(DataState.Success(userProfile))
+                                            close()
 
                                         }
                                         docTask.isCanceled -> {
-                                            Log.i(TAG, "register doc: isCanceled")
                                             trySend(DataState.Canceled)
+                                            close()
 
                                         }
                                         docTask.exception != null -> {
-                                            Log.i(TAG, "register doc: exception")
                                             trySend(DataState.Error(it.exception!!))
+                                            close()
 
                                         }
                                     }
                                 }
                             }
                             it.isCanceled -> {
-                                Log.i(TAG, "register: isCanceled")
                                 trySend(DataState.Canceled)
+                                close()
+
                             }
                             it.exception != null -> {
-                                Log.i(TAG, "register: exception")
                                 trySend(DataState.Error(it.exception!!))
+                                close()
+
                             }
                         }
                     }
                 }
-            awaitClose()
+            awaitClose { cancel() }
         }.flowOn(Dispatchers.IO)
 
 
@@ -145,30 +144,37 @@ class Repository @Inject constructor(
             when {
                 signInTask.isSuccessful -> {
                     trySend(DataState.Success(Constants.LOGIN_SUCCESSFUL))
+                    close()
+
                 }
                 signInTask.isCanceled -> {
                     trySend(DataState.Canceled)
+                    close()
 
                 }
                 signInTask.exception != null -> {
                     when (signInTask.exception) {
                         is FirebaseAuthInvalidCredentialsException -> {
                             trySend(DataState.Invalid(Constants.LOGIN_INVALID_CREDENTIALS))
+                            close()
 
                         }
                         is FirebaseAuthInvalidUserException -> {
                             trySend(DataState.Invalid(Constants.LOGIN_NO_USER))
+                            close()
 
                         }
                         else -> {
                             trySend(DataState.Error(signInTask.exception!!))
+                            close()
+
                         }
                     }
                 }
             }
 
         }
-        awaitClose()
+        awaitClose { cancel() }
 
     }.flowOn(Dispatchers.IO)
 
@@ -181,16 +187,22 @@ class Repository @Inject constructor(
                     documentSnapshot.isSuccessful -> {
                         val profile = documentSnapshot.result?.toObject(UserProfile::class.java)
                         trySend(DataState.Success(profile))
+                        close()
+
                     }
                     documentSnapshot.isCanceled -> {
                         trySend(DataState.Canceled)
+                        close()
+
                     }
                     documentSnapshot.exception != null -> {
                         trySend(DataState.Error(documentSnapshot.exception!!))
+                        close()
+
                     }
                 }
             }
-        awaitClose()
+        awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
 
     fun getAuth() = auth
@@ -201,14 +213,18 @@ class Repository @Inject constructor(
                 when {
                     it.isSuccessful -> {
                         trySend(DataState.Success(Constants.VERIFICATION_EMAIL_SENT_SUCCESS))
+                        close()
+
                     }
                     it.exception != null -> {
                         trySend(DataState.Error(it.exception!!))
+                        close()
+
                     }
                 }
             }
         }
-        awaitClose()
+        awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
 
     fun getDocRef(collectionName: String, documentName: String) =
@@ -269,11 +285,14 @@ class Repository @Inject constructor(
                                                                                                         Constants.FRIEND_ADDITION_SUCCESS
                                                                                                     )
                                                                                                 )
+                                                                                                close()
                                                                                             }
                                                                                             friendsListTask.isCanceled -> {
                                                                                                 trySend(
                                                                                                     DataState.Canceled
                                                                                                 )
+                                                                                                close()
+
                                                                                             }
                                                                                             friendsListTask.exception != null -> {
                                                                                                 trySend(
@@ -281,12 +300,16 @@ class Repository @Inject constructor(
                                                                                                         friendsCountTask.exception!!
                                                                                                     )
                                                                                                 )
+                                                                                                close()
+
                                                                                             }
                                                                                         }
                                                                                     }
                                                                             }
                                                                             friendsCountTask.isCanceled -> {
                                                                                 trySend(DataState.Canceled)
+                                                                                close()
+
                                                                             }
                                                                             friendsCountTask.exception != null -> {
                                                                                 trySend(
@@ -294,6 +317,8 @@ class Repository @Inject constructor(
                                                                                         friendsCountTask.exception!!
                                                                                     )
                                                                                 )
+                                                                                close()
+
                                                                             }
                                                                         }
                                                                     }
@@ -302,6 +327,8 @@ class Repository @Inject constructor(
                                                     }
                                                     currentUserDocSnapShot.isCanceled -> {
                                                         trySend(DataState.Canceled)
+                                                        close()
+
                                                     }
                                                     currentUserDocSnapShot.exception != null -> {
                                                         trySend(
@@ -309,11 +336,15 @@ class Repository @Inject constructor(
                                                                 currentUserDocSnapShot.exception!!
                                                             )
                                                         )
+                                                        close()
+
                                                     }
                                                 }
                                             }
                                     } else {
                                         trySend(DataState.Empty)
+                                        close()
+
                                     }
                                 }
                             }
@@ -321,15 +352,18 @@ class Repository @Inject constructor(
                         }
                         task.isCanceled -> {
                             trySend(DataState.Canceled)
+                            close()
+
                         }
                         task.exception != null -> {
                             trySend(DataState.Error(task.exception!!))
+                            close()
 
                         }
 
                     }
                 }
-            awaitClose()
+            awaitClose { cancel() }
         }.flowOn(Dispatchers.IO)
 
 
@@ -347,7 +381,6 @@ class Repository @Inject constructor(
                     throw it
                 }
             }
-
             fileRef.downloadUrl
         }.addOnCompleteListener { task ->
             if (task.isSuccessful) {
@@ -365,22 +398,32 @@ class Repository @Inject constructor(
                                 true
                             )
                             trySend(DataState.Success(Constants.IMAGE_UPLOAD_SUCCESSFUL))
+                            close()
+
                         }
                     } else if (downloadUri.isCanceled) {
                         trySend(DataState.Canceled)
+                        close()
+
                     } else if (downloadUri.exception != null) {
                         trySend(DataState.Error(downloadUri.exception!!))
+                        close()
+
                     }
 
                 }
 
             } else if (task.isCanceled) {
                 trySend(DataState.Canceled)
+                close()
+
             } else if (task.exception != null) {
                 trySend(DataState.Error(task.exception!!))
+                close()
+
             }
         }
-        awaitClose()
+        awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
 
     fun signOut() {
@@ -412,17 +455,21 @@ class Repository @Inject constructor(
                                     ).get().addOnCompleteListener {
                                         val list = it.result?.toObjects(UserProfile::class.java)
                                         trySend(DataState.Success(list!!))
+                                        close()
+
                                     }
                                 }
                             }
                         }
                         it.exception != null -> {
                             trySend(DataState.Error(it.exception!!))
+                            close()
+
                         }
                     }
                 }
         }
-        awaitClose()
+        awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
 
 
@@ -434,6 +481,7 @@ class Repository @Inject constructor(
             emit(DataState.Success(query))
         } catch (e: Exception) {
             emit(DataState.Error(e))
+
         }
     }.flowOn(Dispatchers.IO)
 
@@ -481,20 +529,25 @@ class Repository @Inject constructor(
                         if (it.result?.size() == 1) {
                             it.result?.documents?.forEach { documentSnapshot ->
                                 trySend(DataState.Success(documentSnapshot.id))
+                                close()
                             }
                         }
                     }
                     it.isCanceled -> {
                         trySend(DataState.Canceled)
+                        close()
+
                     }
                     it.exception != null -> {
                         trySend(DataState.Error(it.exception!!))
+                        close()
+
                     }
                 }
 
 
             }
-        awaitClose()
+        awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
 
     suspend fun sendMessage(message: Message, toUid: String) =
@@ -522,13 +575,18 @@ class Repository @Inject constructor(
                                         when {
                                             friendInboxTask.isSuccessful -> {
                                                 trySend(DataState.Success(message))
+                                                close()
+
                                             }
                                             friendInboxTask.isCanceled -> {
                                                 trySend(DataState.Canceled)
+                                                close()
 
                                             }
                                             friendInboxTask.exception != null -> {
                                                 trySend(DataState.Error(friendInboxTask.exception!!))
+                                                close()
+
                                             }
                                         }
                                     }
@@ -536,19 +594,26 @@ class Repository @Inject constructor(
                             }
                             myInboxTask.isCanceled -> {
                                 trySend(DataState.Canceled)
+                                close()
 
                             }
                             myInboxTask.exception != null -> {
                                 trySend(DataState.Error(myInboxTask.exception!!))
+                                close()
+
                             }
                         }
                     }.addOnFailureListener { sendMessageException ->
                         trySend(DataState.Error(sendMessageException))
+                        close()
+
                     }.addOnCanceledListener {
                         trySend(DataState.Canceled)
+                        close()
+
                     }
             }
-            awaitClose()
+            awaitClose { cancel() }
         }.flowOn(Dispatchers.IO)
 
     // TODO : set document, upload image, then set url to document
@@ -598,6 +663,7 @@ class Repository @Inject constructor(
                                                         friendInboxTask.isSuccessful -> {
                                                             // TODO : separate upload task from document, when upload finishes, set url
                                                             trySend(DataState.Success(Constants.IMAGE_MESSAGE_SUCCESS))
+                                                            close()
                                                         }
                                                         it.isCanceled -> {
                                                             trySend(DataState.Canceled)
@@ -626,9 +692,10 @@ class Repository @Inject constructor(
 
     suspend fun saveImage(imageUrl: String, context: Context) = callbackFlow<DataState<String>> {
         val fileRef = storage.getReferenceFromUrl(imageUrl)
+
         val ONE_MEGABYTE: Long = 1024 * 1024
 
-
+        trySend(DataState.Loading)
         fileRef.getBytes(ONE_MEGABYTE)
             .addOnCanceledListener {
                 trySend(DataState.Canceled)
@@ -654,7 +721,13 @@ class Repository @Inject constructor(
                         context.contentResolver.openOutputStream(uri).use { outputStream ->
                             try {
                                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                                trySend(DataState.Success(uri.path!!))
+                                trySend(
+                                    DataState.Success(
+                                        imageCollection.path!! +
+                                                "/" + fileRef.name + ".jpg"
+                                    )
+                                )
+                                close()
 
                             } catch (e: Exception) {
                                 trySend(DataState.Error(e))

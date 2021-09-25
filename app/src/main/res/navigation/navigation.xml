@@ -113,7 +113,7 @@
     <fragment
         android:id="@+id/viewImageFragment"
         android:name="com.example.messenger.chat.viewImage.ViewImageFragment"
-        android:label="ViewImageFragment"
+        android:label="View Image"
         tools:layout="@layout/view_image_fragment" />
 
 </navigation>
