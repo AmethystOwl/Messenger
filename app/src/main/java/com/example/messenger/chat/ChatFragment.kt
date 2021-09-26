@@ -97,8 +97,6 @@ class ChatFragment : Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
 
         binding.recordButton.setRecordView(binding.recordView)
-
-
         binding.recordView.setRecordPermissionHandler(RecordPermissionHandler {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 return@RecordPermissionHandler true
@@ -114,46 +112,39 @@ class ChatFragment : Fragment() {
         })
         binding.recordButton.isListenForRecord = true
         binding.recordView.setOnRecordListener(object : OnRecordListener {
-
             override fun onStart() {
+                Log.i(TAG, "onStart: ")
                 binding.messageLayout.visibility = View.GONE
                 binding.recordView.visibility = View.VISIBLE
-                val arr: IntArray? = null
-                binding.recordButton.getLocationOnScreen(arr)
-                Log.i(TAG, "onLessThanSecond: $arr!!")
+
 
             }
 
             override fun onCancel() {
-                binding.recordView.visibility = View.GONE
-                binding.messageLayout.visibility = View.VISIBLE
-                val arr: IntArray? = null
-                binding.recordButton.getLocationOnScreen(arr)
-                Log.i(TAG, "onLessThanSecond: $arr!!")
+                Log.i(TAG, "onCancel: ")
+                binding.messageLayout.visibility = View.GONE
+                binding.recordView.visibility = View.VISIBLE
 
             }
 
             override fun onFinish(recordTime: Long, limitReached: Boolean) {
+                Log.i(TAG, "onFinish: ")
                 binding.recordView.visibility = View.GONE
                 binding.messageLayout.visibility = View.VISIBLE
-
-                val arr: IntArray? = null
-                binding.recordButton.getLocationOnScreen(arr)
-                Log.i(TAG, "onLessThanSecond: $arr!!")
-
             }
 
             override fun onLessThanSecond() {
+                Log.i(TAG, "onLessThanSecond: ")
                 binding.recordView.visibility = View.GONE
                 binding.messageLayout.visibility = View.VISIBLE
 
-                val arr: IntArray? = null
-                binding.recordButton.getLocationOnScreen(arr)
-                Log.i(TAG, "onLessThanSecond: $arr!!")
             }
-
-
         })
+        binding.recordView.setOnBasketAnimationEndListener {
+            Log.i(TAG, "setOnBasketAnimationEndListener: ")
+            binding.recordView.visibility = View.GONE
+            binding.messageLayout.visibility = View.VISIBLE
+        }
         myId = sharedViewModel.getCurrentUser()?.uid!!
         friendUid = ChatFragmentArgs.fromBundle(requireArguments()).friendUId
         /*  if (binding.sendTextEditText.text.trim().isEmpty()) {
