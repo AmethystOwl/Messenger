@@ -3,6 +3,7 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="../../.gradle/caches/transforms-3/5bdae9cbe752d0095eb3d6d4f95d9aff/transformed/jetified-RecordView-3.0.2/res/drawable/recv_bg_mic.xml" value="0.221875" />
         <entry key="app/src/main/res/drawable-v21/circular_imageview_selector.xml" value="0.2630208333333333" />
         <entry key="app/src/main/res/drawable-v24/ic_baseline_send_24.xml" value="0.2598958333333333" />
         <entry key="app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.3609375" />
@@ -22,6 +23,7 @@
         <entry key="app/src/main/res/drawable/ic_baseline_check_circle_outline_white_24.xml" value="0.20729166666666668" />
         <entry key="app/src/main/res/drawable/ic_baseline_image_24.xml" value="0.2520833333333333" />
         <entry key="app/src/main/res/drawable/ic_baseline_info_48.xml" value="0.3619791666666667" />
+        <entry key="app/src/main/res/drawable/ic_baseline_mic_24.xml" value="0.221875" />
         <entry key="app/src/main/res/drawable/ic_baseline_person_add.xml" value="0.3609375" />
         <entry key="app/src/main/res/drawable/ic_baseline_send_48.xml" value="0.3619791666666667" />
         <entry key="app/src/main/res/drawable/ic_kebabvertical.xml" value="0.24739583333333334" />
@@ -35,7 +37,7 @@
         <entry key="app/src/main/res/layout-v23/chat_fragment.xml" value="0.246875" />
         <entry key="app/src/main/res/layout/activity_home.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
-        <entry key="app/src/main/res/layout/chat_fragment.xml" value="0.6225266362252664" />
+        <entry key="app/src/main/res/layout/chat_fragment.xml" value="0.33" />
         <entry key="app/src/main/res/layout/chat_header_model.xml" value="0.5" />
         <entry key="app/src/main/res/layout/chat_model.xml" value="0.33" />
         <entry key="app/src/main/res/layout/chats_fragment.xml" value="0.16767983789260385" />

@@ -87,5 +87,19 @@ open class Utils {
                 onSdk29Up()
             } else null
         }
+
+
+        fun shortArrayToByteArray(sData: ShortArray): ByteArray {
+            val shortArrSize = sData.size
+            val bytes = ByteArray(shortArrSize * 2)
+            for (i in 0 until shortArrSize) {
+                bytes[i * 2] = (sData[i].toInt() and 0x00FF).toByte()
+                bytes[i * 2 + 1] = (sData[i].toInt() shr 8).toByte()
+                sData[i] = 0
+            }
+            return bytes
+        }
     }
+
+
 }

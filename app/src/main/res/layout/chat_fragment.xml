@@ -35,7 +35,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="5dp"
             android:orientation="horizontal"
             android:visibility="visible"
             android:weightSum="2">
@@ -49,13 +49,13 @@
                 android:visibility="visible">
 
                 <ImageView
-                    android:id="@+id/btnDataSend"
+                    android:id="@+id/openGallery"
                     android:layout_width="48dp"
-
                     android:layout_height="48dp"
                     android:layout_gravity="center|bottom"
                     android:layout_marginStart="5dp"
                     android:background="@color/ef_grey"
+                    android:contentDescription="@string/open_gallery"
                     android:src="@drawable/ic_baseline_thumbnail_image_200" />
 
                 <androidx.cardview.widget.CardView
@@ -81,6 +81,7 @@
                             android:layout_height="match_parent"
                             android:layout_marginEnd="3dp"
                             android:hint="@string/type_a_message"
+                            android:importantForAutofill="no"
                             android:inputType="textMultiLine"
                             android:padding="8dp"
                             android:scrollbars="vertical"
@@ -125,24 +126,21 @@
                 app:slide_to_cancel_text="Slide to cancel" />
 
 
-            <ImageView
-                android:id="@+id/btnSend"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center|bottom"
-                android:layout_marginEnd="5dp"
-                android:layout_weight=".2"
-                android:src="@drawable/ic_baseline_send_24"
-                android:visibility="gone" />
-
             <com.devlomi.record_view.RecordButton
                 android:id="@+id/recordButton"
                 android:layout_width="32dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center|bottom"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginTop="5dp"
                 android:layout_marginEnd="5dp"
+                android:layout_marginBottom="5dp"
                 android:layout_weight=".2"
                 android:background="@drawable/recv_bg_mic"
+                android:backgroundTint="@color/purple_500"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="5dp"
+                android:visibility="visible"
                 app:mic_icon="@drawable/ic_baseline_mic_24" />
 
 
@@ -173,6 +171,7 @@
                     android:id="@+id/imgGallery"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
+                    android:contentDescription="@string/open_gallery"
                     android:src="@drawable/ic_baseline_thumbnail_image_200" />
 
 
@@ -190,7 +189,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_baseline_thumbnail_image_200"
-                    android:text="Gallery"
+                    android:text="@string/gallery"
                     android:textStyle="bold" />
 
 

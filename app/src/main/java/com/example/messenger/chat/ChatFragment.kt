@@ -6,9 +6,15 @@ import android.app.Activity
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ContentValues
 import android.graphics.Color
+import android.media.*
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -30,6 +36,7 @@ import com.example.messenger.model.UserProfile
 import com.firebase.ui.common.ChangeEventType
 import com.firebase.ui.firestore.ChangeEventListener
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
+import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,6 +44,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import me.piruin.quickaction.ActionItem
 import me.piruin.quickaction.QuickAction
 import pub.devrel.easypermissions.EasyPermissions
+import java.io.IOException
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 @AndroidEntryPoint
@@ -48,6 +57,7 @@ class ChatFragment : Fragment() {
 
 
     private lateinit var messageAdapter: MessageAdapter
+    private lateinit var audioRecord: AudioRecord
     private var friendProfile: UserProfile? = null
     private var currentUserProfile: UserProfile? = null
     private var friendUid: String? = null
@@ -63,6 +73,17 @@ class ChatFragment : Fragment() {
     private lateinit var myId: String
     private var selectedMsg: Message? = null
     private var lastPos: Int = -1
+    private val isReading = AtomicBoolean(false)
+    private var recordingThread: Thread? = null
+
+
+    private val SAMPLING_RATE_IN_HZ = 44100
+    private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+    private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+    private var BufferElements2Rec = 1024
+    private var BytesPerElement = 2
+    private val BUFFER_SIZE = BufferElements2Rec * BytesPerElement
+
 
     // TODO : lma y3ml pick l image,
     //  redirect 3la fragment tnya y2dr y7ot text t7t el image,
@@ -72,16 +93,16 @@ class ChatFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             if (it.resultCode == Activity.RESULT_OK) {
                 if (it.data?.data != null) {
-                    //  val message = Message(
-                    //     message = if (binding.sendTextEditText.text.trim()
-                    //            .isEmpty()
-                    //    ) null else binding.sendTextEditText.text.toString(),
-                    //   senderUid = myId,
-                    //   profilePictureUrl = currentUserProfile?.profilePictureUrl,
-                    //)
+                    val message = Message(
+                        message = if (binding.msgText.text.trim()
+                                .isEmpty()
+                        ) null else binding.msgText.text.toString(),
+                        senderUid = myId,
+                        profilePictureUrl = currentUserProfile?.profilePictureUrl,
+                    )
                     val imageUri = it.data?.data!!
-                    //    chatViewModel.sendImageMessage(message, imageUri, friendUid!!)
-                    //   binding.sendTextEditText.text.clear()
+                    chatViewModel.sendImageMessage(message, imageUri, friendUid!!)
+                    binding.msgText.text.clear()
 
                 }
             }
@@ -110,12 +131,35 @@ class ChatFragment : Fragment() {
 
 
         })
-        binding.recordButton.isListenForRecord = true
+
         binding.recordView.setOnRecordListener(object : OnRecordListener {
+            @SuppressLint("MissingPermission")
             override fun onStart() {
                 Log.i(TAG, "onStart: ")
                 binding.messageLayout.visibility = View.GONE
                 binding.recordView.visibility = View.VISIBLE
+
+
+                // start recording
+
+                if (EasyPermissions.hasPermissions(
+                        requireContext(),
+                        Manifest.permission.RECORD_AUDIO
+                    )
+                ) {
+                    startRecording()
+
+                }
+            }
+
+            override fun onFinish(recordTime: Long, limitReached: Boolean) {
+                Log.i(TAG, "onFinish: $recordTime")
+                binding.recordView.visibility = View.GONE
+                binding.messageLayout.visibility = View.VISIBLE
+
+                // stop recording and send
+
+                stopRecording()
 
 
             }
@@ -125,18 +169,22 @@ class ChatFragment : Fragment() {
                 binding.messageLayout.visibility = View.GONE
                 binding.recordView.visibility = View.VISIBLE
 
-            }
+                audioRecord.stop()
+                audioRecord.release()
 
-            override fun onFinish(recordTime: Long, limitReached: Boolean) {
-                Log.i(TAG, "onFinish: ")
-                binding.recordView.visibility = View.GONE
-                binding.messageLayout.visibility = View.VISIBLE
             }
 
             override fun onLessThanSecond() {
                 Log.i(TAG, "onLessThanSecond: ")
                 binding.recordView.visibility = View.GONE
                 binding.messageLayout.visibility = View.VISIBLE
+
+
+
+
+
+                audioRecord.stop()
+                audioRecord.release()
 
             }
         })
@@ -147,34 +195,34 @@ class ChatFragment : Fragment() {
         }
         myId = sharedViewModel.getCurrentUser()?.uid!!
         friendUid = ChatFragmentArgs.fromBundle(requireArguments()).friendUId
-        /*  if (binding.sendTextEditText.text.trim().isEmpty()) {
-              binding.fab.background =
-                  AppCompatResources.getDrawable(requireContext(), R.drawable.ic_baseline_mic_24)
-          } else {
-              binding.fab.background =
-                  AppCompatResources.getDrawable(requireContext(), R.drawable.ic_baseline_send_24)
-          }
 
-          binding.sendTextEditText.addTextChangedListener(object : TextWatcher {
-              override fun beforeTextChanged(s: CharSequence?, start: Int, before: Int, cound: Int) {
+        binding.msgText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, before: Int, cound: Int) {
 
-              }
+            }
 
-              override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                  if (s?.trim()?.isEmpty()!!) {
-                      binding.fab.setImageResource(R.drawable.ic_baseline_mic_24)
-                  } else {
-                      binding.fab.setImageResource(R.drawable.ic_baseline_send_24)
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                when {
+                    s?.trim()?.isEmpty()!! -> {
+                        binding.recordButton.setImageResource(R.drawable.ic_baseline_mic_24)
+                        binding.recordButton.isListenForRecord = true
 
-                  }
-              }
+                    }
+                    else -> {
+                        binding.recordButton.setImageResource(R.drawable.ic_baseline_send_24)
+                        binding.recordButton.isListenForRecord = false
 
-              override fun afterTextChanged(s: Editable?) {
 
-              }
+                    }
+                }
+            }
 
-          })
-  */
+            override fun afterTextChanged(s: Editable?) {
+
+            }
+
+        })
+
 
         setupAdapter()
 
@@ -320,57 +368,31 @@ class ChatFragment : Fragment() {
             }
         }
 
-        /*     binding.fab.setOnClickListener {
-                 if (binding.sendTextEditText.text.trim()
-                         .isNotEmpty()
-                 ) {
-                     // send message
-                     if (friendUid != null) {
-                         val message = Message(
-                             message = binding.sendTextEditText.text.toString(),
-                             senderUid = myId,
-                             profilePictureUrl = currentUserProfile?.profilePictureUrl,
+        binding.recordButton.setOnClickListener {
+            if (binding.msgText.text.trim()
+                    .isNotEmpty()
+            ) {
+                if (friendUid != null) {
+                    val message = Message(
+                        message = binding.msgText.text.toString(),
+                        senderUid = myId,
+                        profilePictureUrl = currentUserProfile?.profilePictureUrl,
 
-                             )
-                         chatViewModel.sendMessage(message, friendUid!!)
-                         binding.sendTextEditText.text.clear()
-                     }
-                 }
+                        )
+                    chatViewModel.sendMessage(message, friendUid!!)
+                    binding.msgText.text.clear()
+                }
+            }
 
-             }
-             binding.selectImageButton.setOnClickListener {
-                 ImagePicker.with(this).createIntent { imageIntent ->
-                     getImage.launch(imageIntent)
-                 }
+        }
+        binding.openGallery.setOnClickListener {
+            ImagePicker.with(this).createIntent { imageIntent ->
+                getImage.launch(imageIntent)
+            }
 
 
-             }
-         }
+        }
 
-         binding.fab.setOnTouchListener { v, event ->
-             if (binding.sendTextEditText.text.trim().isEmpty()) {
-                 when (event.action) {
-                     MotionEvent.ACTION_DOWN -> {
-                         if (!hasAudioRecordPermission()) {
-                             requestAudioRecordPermission()
-                         } else {
-                             // TODO : Start recording
-                           //  var recorder = AudioRecord()
-
-                         }
-                     }
-                     MotionEvent.ACTION_UP -> {
-                         // TODO : Stop recording and send
-                     }
-                     MotionEvent.ACTION_CANCEL -> {
-                         // TODO : Cancel
-                     }
-                 }
-
-             }
-             false
-         }
- */
         return binding.root
     }
 
@@ -537,4 +559,60 @@ class ChatFragment : Fragment() {
         super.onDestroyView()
         _binding = null
     }
+
+    @SuppressLint("MissingPermission")
+    private fun startRecording() {
+        audioRecord = AudioRecord(
+            MediaRecorder.AudioSource.DEFAULT, SAMPLING_RATE_IN_HZ,
+            CHANNEL_CONFIG, AUDIO_FORMAT, BUFFER_SIZE
+        )
+        audioRecord.startRecording()
+        isReading.set(true)
+        recordingThread = Thread(RecordingRunnable, "AudioRecorder Thread")
+        recordingThread?.start()
+    }
+
+    private val RecordingRunnable = Runnable {
+
+        val externalContentUri = Utils.isSdkVer29Up {
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        } ?: MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val contentValues = ContentValues().apply {
+            put(MediaStore.Audio.Media.TITLE, "testo21")
+            put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
+            put(MediaStore.Audio.Media.DISPLAY_NAME, "testo22")
+            val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+            Utils.isSdkVer29Up {}
+                ?: put(
+                    MediaStore.Audio.AudioColumns.DATA,
+                    "${dir}${"/asdad"}"
+                )
+        }
+
+        try {
+            requireContext().contentResolver.insert(externalContentUri, contentValues)
+                ?.also { uri ->
+                    requireContext().contentResolver.openOutputStream(uri).use { outputStream ->
+                        val sData = ShortArray(BufferElements2Rec)
+                        while (isReading.get()) {
+                            audioRecord.read(sData, 0, BufferElements2Rec)
+                            val bData = Utils.shortArrayToByteArray(sData)
+                            outputStream?.write(bData, 0, BufferElements2Rec * BytesPerElement)
+                        }
+                    }
+
+                }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun stopRecording() {
+        isReading.set(false)
+        audioRecord.stop()
+        audioRecord.release()
+        recordingThread = null
+    }
+
+
 }

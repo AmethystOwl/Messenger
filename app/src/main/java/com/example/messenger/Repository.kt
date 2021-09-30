@@ -693,7 +693,7 @@ class Repository @Inject constructor(
     suspend fun saveImage(imageUrl: String, context: Context) = callbackFlow<DataState<String>> {
         val fileRef = storage.getReferenceFromUrl(imageUrl)
 
-        val ONE_MEGABYTE: Long = 1024 * 1024
+        val ONE_MEGABYTE: Long = 1024L * 1024L
 
         trySend(DataState.Loading)
         fileRef.getBytes(ONE_MEGABYTE)
