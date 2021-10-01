@@ -44,7 +44,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import me.piruin.quickaction.ActionItem
 import me.piruin.quickaction.QuickAction
 import pub.devrel.easypermissions.EasyPermissions
-import java.io.IOException
+import java.io.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -133,7 +133,7 @@ class ChatFragment : Fragment() {
         })
 
         binding.recordView.setOnRecordListener(object : OnRecordListener {
-            @SuppressLint("MissingPermission")
+            // @SuppressLint("MissingPermission")
             override fun onStart() {
                 Log.i(TAG, "onStart: ")
                 binding.messageLayout.visibility = View.GONE
@@ -142,13 +142,9 @@ class ChatFragment : Fragment() {
 
                 // start recording
 
-                if (EasyPermissions.hasPermissions(
-                        requireContext(),
-                        Manifest.permission.RECORD_AUDIO
-                    )
-                ) {
+                if (hasAudioRecordPermission()) {
                     startRecording()
-
+                    // playRecording()
                 }
             }
 
@@ -158,7 +154,6 @@ class ChatFragment : Fragment() {
                 binding.messageLayout.visibility = View.VISIBLE
 
                 // stop recording and send
-
                 stopRecording()
 
 
@@ -178,9 +173,6 @@ class ChatFragment : Fragment() {
                 Log.i(TAG, "onLessThanSecond: ")
                 binding.recordView.visibility = View.GONE
                 binding.messageLayout.visibility = View.VISIBLE
-
-
-
 
 
                 audioRecord.stop()
@@ -262,8 +254,7 @@ class ChatFragment : Fragment() {
             }
 
         }
-        sharedViewModel.currentUserProfileState.observe(viewLifecycleOwner)
-        { currentUserProfileDataState ->
+        sharedViewModel.currentUserProfileState.observe(viewLifecycleOwner) { currentUserProfileDataState ->
             when (currentUserProfileDataState) {
                 is DataState.Loading -> {
 
@@ -389,8 +380,6 @@ class ChatFragment : Fragment() {
             ImagePicker.with(this).createIntent { imageIntent ->
                 getImage.launch(imageIntent)
             }
-
-
         }
 
         return binding.root
@@ -463,34 +452,29 @@ class ChatFragment : Fragment() {
             }
 
 
-        }
+        })
+    val onImageClickListener = MessageAdapter.OnMessageClickListener(
+        onClickListener = object : (Message, View, Int) -> Unit {
+            override fun invoke(message: Message, v: View, pos: Int) {
+                if (message.imageMessageUrl != null) {
+                    val test =
+                        (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+                    chatViewModel.setSelectedMessage(message, test)
 
+                    findNavController().navigate(ChatFragmentDirections.actionChatFragmentToImageFragment())
+                }
 
-    )
-    val onImageClickListener = MessageAdapter.OnMessageClickListener(onClickListener = object :
-            (Message, View, Int) -> Unit {
-        override fun invoke(message: Message, v: View, pos: Int) {
-            if (message.imageMessageUrl != null) {
-                val test =
-                    (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-                chatViewModel.setSelectedMessage(message, test)
-
-                findNavController().navigate(ChatFragmentDirections.actionChatFragmentToImageFragment())
             }
-
-        }
-    }, onLongClickListener = object : (Message, View, Int) -> Boolean {
-        override fun invoke(message: Message, v: View, pos: Int): Boolean {
-            messageAdapter.setItemChecked(pos, true)
-            if (pos == 0) {
-                binding.chatRecyclerview.scrollToPosition(0)
+        },
+        onLongClickListener = object : (Message, View, Int) -> Boolean {
+            override fun invoke(message: Message, v: View, pos: Int): Boolean {
+                messageAdapter.setItemChecked(pos, true)
+                if (pos == 0) {
+                    binding.chatRecyclerview.scrollToPosition(0)
+                }
+                return true
             }
-            return true
-        }
-
-    }
-
-    )
+        })
 
 
     // TODO : use blurred image while image loads(stackoverflow)
@@ -543,6 +527,7 @@ class ChatFragment : Fragment() {
         chatViewModel.setSelectedMessage(null, null)
         mainActivity = activity as MainActivity
         messageAdapter.startListening()
+        binding.chatRecyclerview.scrollToPosition(0)
 
     }
 
@@ -573,19 +558,20 @@ class ChatFragment : Fragment() {
     }
 
     private val RecordingRunnable = Runnable {
-
+        // TODO : move to repository to upload
+        val recordingName = "record_" + System.currentTimeMillis().toShort()
         val externalContentUri = Utils.isSdkVer29Up {
             MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         } ?: MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val contentValues = ContentValues().apply {
-            put(MediaStore.Audio.Media.TITLE, "testo21")
+            put(MediaStore.Audio.Media.TITLE, recordingName)
             put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
-            put(MediaStore.Audio.Media.DISPLAY_NAME, "testo22")
+            put(MediaStore.Audio.Media.DISPLAY_NAME, recordingName)
             val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
             Utils.isSdkVer29Up {}
                 ?: put(
                     MediaStore.Audio.AudioColumns.DATA,
-                    "${dir}${"/asdad"}"
+                    "${dir}/${recordingName}"
                 )
         }
 
@@ -607,6 +593,7 @@ class ChatFragment : Fragment() {
         }
     }
 
+
     private fun stopRecording() {
         isReading.set(false)
         audioRecord.stop()
@@ -615,4 +602,59 @@ class ChatFragment : Fragment() {
     }
 
 
+    private fun playRecording() {
+        // TODO : move to repository and change it to play FROM fireStore
+        val audioAttributes = AudioAttributes.Builder()
+            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .build()
+        val audioFormat = AudioFormat.Builder()
+            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+            .setSampleRate(SAMPLING_RATE_IN_HZ)
+            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+            .build()
+
+
+        val audioTrack = AudioTrack(
+            audioAttributes,
+            audioFormat,
+            BUFFER_SIZE,
+            AudioTrack.MODE_STREAM,
+            AudioManager.AUDIO_SESSION_ID_GENERATE
+        )
+
+        val file =
+            File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.absolutePath + "/asdad")
+        try {
+            val fileInputStream = FileInputStream(file)
+
+            val byteData = ByteArray(file.length().toInt())
+            audioTrack.play()
+            fileInputStream.read(byteData)
+            fileInputStream.close()
+            audioTrack.play()
+            audioTrack.write(byteData, 0, byteData.size)
+            /*  var bytesread = 0
+             var ret: Int
+             val count = 512 * 1024 // 512 Kb
+             val size = file.length()
+              while (bytesread < size) {
+                   ret = fileInputStream.read(byteData, 0, count)
+                   if (ret != -1) {
+                       audioTrack.write(byteData, 0, ret)
+                       bytesread += ret
+                   } else {
+                       break
+                   }
+               }*/
+            audioTrack.stop()
+            audioTrack.release()
+
+
+        } catch (e: Exception) {
+            Log.e(TAG, "An error has occurred while playing audio : ", e)
+        }
+    }
+
+    // TODO : Share location feature...learn more about google maps :)
 }
