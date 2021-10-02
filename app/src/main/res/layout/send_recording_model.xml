@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="onMessageLongClickListener"
+            type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
+
+        <variable
+            name="data"
+            type="com.example.messenger.model.Message" />
+
+
+        <variable
+            name="view"
+            type="android.view.View" />
+
+
+        <variable
+            name="pos"
+            type="Integer" />
+
+    </data>
+
+
+    <RelativeLayout
+        android:id="@+id/parentRelativeLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#000000"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp">
+
+        <TextView
+            android:id="@+id/dateTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            app:getDateFromTimeStamp="@{data.timestamp}"
+            tools:text="12 Apr 2021" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/messageCardView"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_below="@id/dateTextView"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:background="@color/fui_transparent"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="48dp"
+            android:onClick="@{() -> onMessageLongClickListener.onClick(data,view,pos)}"
+            android:onLongClick="@{() -> onMessageLongClickListener.onLongClick(data,view,pos)}"
+            app:cardCornerRadius="50dp"
+            app:cardPreventCornerOverlap="true"
+            app:isChecked="@{data.checked}"
+            app:isSender="@{data.sender}">
+
+
+            <RelativeLayout
+                android:id="@+id/topContentRelativeLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/linearProgressIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:indeterminate="false"
+                    android:max="100"
+                    android:progress="20"
+                    app:trackColor="#774df2"
+                    app:trackThickness="50dp" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="10dp"
+                    android:contentDescription="@string/play_pause_recording"
+                    android:src="@drawable/ic_baseline_play_circle_24" />
+
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentEnd="true"
+                    android:gravity="center_vertical"
+                    tools:ignore="RelativeOverlap">
+
+                    <TextView
+                        android:id="@+id/startTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_toStartOf="@id/timeSeparator"
+                        android:textSize="15sp"
+                        tools:text="00:00" />
+
+                    <TextView
+                        android:id="@+id/timeSeparator"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="3dp"
+                        android:layout_marginEnd="3dp"
+                        android:layout_toStartOf="@id/endTimeTv"
+                        android:textSize="15sp"
+                        tools:text="/" />
+
+                    <TextView
+                        android:id="@+id/endTimeTv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:layout_marginEnd="10dp"
+                        android:textSize="15sp"
+                        tools:text="02:00" />
+
+
+                </RelativeLayout>
+
+
+            </RelativeLayout>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/messageTimeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/messageCardView"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="20dp"
+            android:textColor="#ffffff"
+            android:textSize="12sp"
+            app:getTimeFromTimeStamp="@{data.timestamp}"
+            app:messageTimeVisibility="@{data.checked}"
+            tools:text="10:00 AM" />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/messageStatus"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_alignBottom="@id/messageCardView"
+            android:layout_toStartOf="@id/messageCardView"
+            android:src="@drawable/ic_baseline_access_time_white_15"
+            app:setMessageStatus="@{data.isSent}"
+            tools:src="@drawable/ic_baseline_access_time_white_15" />
+    </RelativeLayout>
+</layout>

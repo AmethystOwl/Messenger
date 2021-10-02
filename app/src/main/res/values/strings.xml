@@ -258,4 +258,5 @@
     <string name="open_gallery">Open Gallery</string>
     <string name="gallery">Gallery</string>
     <string name="friend_info">Friend Info</string>
+    <string name="play_pause_recording">play pause recording</string>
 </resources>
