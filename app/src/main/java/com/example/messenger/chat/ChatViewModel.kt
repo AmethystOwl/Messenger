@@ -1,6 +1,8 @@
 package com.example.messenger.chat
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.media.AudioRecord
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -42,6 +44,10 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
 
     private var _imageDownloadState = MutableLiveData<DataState<String?>>()
     val imageDownloadState: LiveData<DataState<String?>> get() = _imageDownloadState
+
+    private var _recordingState = MutableLiveData<DataState<String>>()
+    val recordingState: LiveData<DataState<String>> get() = _recordingState
+
 
     init {
         _selectedMessagePosition.value = 0
@@ -101,4 +107,26 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
     fun doneObservingDownloadState() {
         _imageDownloadState.value = DataState.Empty
     }
+
+
+    @SuppressLint("NewApi")
+    fun startRecording(context: Context, record: AudioRecord, fileName: String, isQ: Boolean) {
+        viewModelScope.launch {
+            if (isQ) {
+                repo.downloadRecordingQ(context, record, fileName).collect {
+                    _recordingState.value = it
+                }
+            } else {
+                repo.downloadRecordingLegacy(record, fileName).collect {
+                    _recordingState.value = it
+                }
+            }
+        }
+
+    }
+
+    fun stopRecording() {
+        repo.stopRecording()
+    }
+
 }

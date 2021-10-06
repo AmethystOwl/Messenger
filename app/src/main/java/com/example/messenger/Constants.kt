@@ -1,5 +1,7 @@
 package com.example.messenger
 
+import android.media.AudioFormat
+
 object Constants {
     const val DOCUMENT_ADDED = 601
     const val DOCUMENT_MODIFIED = 602
@@ -43,30 +45,37 @@ object Constants {
     const val STATUS_OFFLINE = "Offline"
     const val STATUS_AWAY = "Away"
 
-    val USER_COLLECTION = "users"
-    val MESSAGE_COLLECTION = "messages"
-    val USER_INBOX_COLLECTION = "inbox"
-    val USER_CONVERSATION_COLLECTION = "conversation"
+    const val USER_COLLECTION = "users"
+    const val MESSAGE_COLLECTION = "messages"
+    const val USER_INBOX_COLLECTION = "inbox"
+    const val USER_CONVERSATION_COLLECTION = "conversation"
 
-    val FIELD_ACCOUNT_CREATION_DATE = "accountCreationDate"
-    val FIELD_ALLOW_DIRECT_MESSAGING = "allowDirectMessaging"
-    val FIELD_COUNTRY = "country"
-    val FIELD_DATE_OF_BIRTH = "dateOfBirth"
-    val FIELD_EMAIL = "email"
-    val FIELD_FIRST_NAME = "fname"
-    val FIELD_LAST_NAME = "lname"
-    val FIELD_FRIENDS_COUNT = "friendsCount"
-    val FIELD_FRIENDS_LIST = "friendsList"
-    val FIELD_TIMESTAMP = "timestamp"
-    val FIELD_TIME = "time"
+    const val FIELD_ACCOUNT_CREATION_DATE = "accountCreationDate"
+    const val FIELD_ALLOW_DIRECT_MESSAGING = "allowDirectMessaging"
+    const val FIELD_COUNTRY = "country"
+    const val FIELD_DATE_OF_BIRTH = "dateOfBirth"
+    const val FIELD_EMAIL = "email"
+    const val FIELD_FIRST_NAME = "fname"
+    const val FIELD_LAST_NAME = "lname"
+    const val FIELD_FRIENDS_COUNT = "friendsCount"
+    const val FIELD_FRIENDS_LIST = "friendsList"
+    const val FIELD_TIMESTAMP = "timestamp"
+    const val FIELD_TIME = "time"
 
-    val FIELD_PHONE_NUMBER = "phoneNumber"
-    val FIELD_PHONE_VERIFIED = "phoneVerified"
-    val FIELD_PROFILE_CREATION_COMPLETED = "profileCreationCompleted"
-    val FIELD_PROFILE_PICTURE_URL = "profilePictureUrl"
-    val FIELD_STATUS = "status"
-    val FIELD_SEARCH_LIST = "searchList"
+    const val FIELD_PHONE_NUMBER = "phoneNumber"
+    const val FIELD_PHONE_VERIFIED = "phoneVerified"
+    const val FIELD_PROFILE_CREATION_COMPLETED = "profileCreationCompleted"
+    const val FIELD_PROFILE_PICTURE_URL = "profilePictureUrl"
+    const val FIELD_STATUS = "status"
+    const val FIELD_SEARCH_LIST = "searchList"
 
-    val FIELD_INBOX_SENDER_UID = "senderUid"
+    const val FIELD_INBOX_SENDER_UID = "senderUid"
 
+
+    const val SAMPLING_RATE_IN_HZ = 44100
+    const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
+    const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
+    const val BufferElements2Rec = 1024
+    const val BytesPerElement = 2
+    const val BUFFER_SIZE = BufferElements2Rec * BytesPerElement
 }

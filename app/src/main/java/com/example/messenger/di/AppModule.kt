@@ -38,4 +38,34 @@ object AppModule {
     @Provides
     fun provideStorage() = FirebaseStorage.getInstance()
 
+
+    /* @Singleton
+     @Provides
+     fun provideAudioAttributes(): AudioAttributes = AudioAttributes.Builder()
+         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+         .setUsage(AudioAttributes.USAGE_MEDIA)
+         .build()
+
+     @Singleton
+     @Provides
+     // add annotation to specify IN or OUT
+     fun provideAudioRecordFormat(): AudioFormat = AudioFormat.Builder()
+         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+         .setSampleRate(Constants.SAMPLING_RATE_IN_HZ)
+         .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+         .build()
+
+     @SuppressLint("MissingPermission")
+     @Singleton
+     @Provides
+     fun provideAudioRecorder() =
+         AudioRecord(
+             MediaRecorder.AudioSource.DEFAULT,
+             Constants.SAMPLING_RATE_IN_HZ,
+             Constants.CHANNEL_CONFIG,
+             Constants.AUDIO_FORMAT,
+             Constants.BUFFER_SIZE
+         )*/
+
 }
+

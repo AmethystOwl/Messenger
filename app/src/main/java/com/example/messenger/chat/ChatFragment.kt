@@ -9,6 +9,7 @@ import android.content.ClipboardManager
 import android.content.ContentValues
 import android.graphics.Color
 import android.media.*
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -29,6 +30,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.devlomi.record_view.OnRecordListener
 import com.devlomi.record_view.RecordPermissionHandler
 import com.example.messenger.*
+import com.example.messenger.Constants.AUDIO_FORMAT
+import com.example.messenger.Constants.BUFFER_SIZE
+import com.example.messenger.Constants.BufferElements2Rec
+import com.example.messenger.Constants.BytesPerElement
+import com.example.messenger.Constants.CHANNEL_CONFIG
+import com.example.messenger.Constants.SAMPLING_RATE_IN_HZ
 import com.example.messenger.adapter.MessageAdapter
 import com.example.messenger.databinding.ChatFragmentBinding
 import com.example.messenger.model.Message
@@ -40,11 +47,12 @@ import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import me.piruin.quickaction.ActionItem
 import me.piruin.quickaction.QuickAction
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.*
+import java.lang.Runnable
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -57,6 +65,7 @@ class ChatFragment : Fragment() {
 
 
     private lateinit var messageAdapter: MessageAdapter
+
     private lateinit var audioRecord: AudioRecord
     private var friendProfile: UserProfile? = null
     private var currentUserProfile: UserProfile? = null
@@ -73,17 +82,10 @@ class ChatFragment : Fragment() {
     private lateinit var myId: String
     private var selectedMsg: Message? = null
     private var lastPos: Int = -1
-    private val isReading = AtomicBoolean(false)
+    private val isRecordingAtomic = AtomicBoolean(false)
     private var recordingThread: Thread? = null
-
-
-    private val SAMPLING_RATE_IN_HZ = 44100
-    private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
-    private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
-    private var BufferElements2Rec = 1024
-    private var BytesPerElement = 2
-    private val BUFFER_SIZE = BufferElements2Rec * BytesPerElement
-
+    private var recordingName: String? = null
+    private var audioUri: Uri? = null
 
     // TODO : lma y3ml pick l image,
     //  redirect 3la fragment tnya y2dr y7ot text t7t el image,
@@ -133,18 +135,14 @@ class ChatFragment : Fragment() {
         })
 
         binding.recordView.setOnRecordListener(object : OnRecordListener {
-            // @SuppressLint("MissingPermission")
             override fun onStart() {
                 Log.i(TAG, "onStart: ")
                 binding.messageLayout.visibility = View.GONE
                 binding.recordView.visibility = View.VISIBLE
-
-
                 // start recording
 
                 if (hasAudioRecordPermission()) {
                     startRecording()
-                    // playRecording()
                 }
             }
 
@@ -163,9 +161,12 @@ class ChatFragment : Fragment() {
                 Log.i(TAG, "onCancel: ")
                 binding.messageLayout.visibility = View.GONE
                 binding.recordView.visibility = View.VISIBLE
+                // delete audio created
+                stopRecording()
 
-                audioRecord.stop()
-                audioRecord.release()
+                if (audioUri != null) {
+                    requireContext().contentResolver.delete(audioUri!!, null, null)
+                }
 
             }
 
@@ -173,10 +174,11 @@ class ChatFragment : Fragment() {
                 Log.i(TAG, "onLessThanSecond: ")
                 binding.recordView.visibility = View.GONE
                 binding.messageLayout.visibility = View.VISIBLE
-
-
-                audioRecord.stop()
-                audioRecord.release()
+                // delete audio created
+                stopRecording()
+                if (audioUri != null) {
+                    requireContext().contentResolver.delete(audioUri!!, null, null)
+                }
 
             }
         })
@@ -358,7 +360,22 @@ class ChatFragment : Fragment() {
                 }
             }
         }
+        chatViewModel.recordingState.observe(viewLifecycleOwner) {
+            when (it) {
+                is DataState.Loading -> {
+                    Log.i(TAG, "onCreateView: recording loading")
+                }
+                is DataState.Success -> {
+                    Log.d(TAG, "onCreateView: recording success ${it.data}")
+                    Toast.makeText(requireContext(), it.data, Toast.LENGTH_LONG).show()
+                }
+                is DataState.Error -> {
+                    Log.e(TAG, "onCreateView: recording error", it.exception)
+                }
 
+
+            }
+        }
         binding.recordButton.setOnClickListener {
             if (binding.msgText.text.trim()
                     .isNotEmpty()
@@ -543,26 +560,36 @@ class ChatFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        audioRecord.release()
+
     }
 
     @SuppressLint("MissingPermission")
     private fun startRecording() {
         audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.DEFAULT, SAMPLING_RATE_IN_HZ,
-            CHANNEL_CONFIG, AUDIO_FORMAT, BUFFER_SIZE
+            MediaRecorder.AudioSource.DEFAULT,
+            SAMPLING_RATE_IN_HZ,
+            CHANNEL_CONFIG,
+            AUDIO_FORMAT,
+            BUFFER_SIZE
         )
-        audioRecord.startRecording()
-        isReading.set(true)
-        recordingThread = Thread(RecordingRunnable, "AudioRecorder Thread")
-        recordingThread?.start()
+        /*   audioRecord.startRecording()
+           isRecordingAtomic.set(true)
+           recordingThread = Thread(recordingRunnable, "AudioRecorder Thread")
+           recordingThread?.start()*/
+        val isQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        chatViewModel.startRecording(requireContext(), audioRecord, "testoh", isQ)
+
     }
 
-    private val RecordingRunnable = Runnable {
+    private val recordingRunnable = Runnable {
         // TODO : move to repository to upload
-        val recordingName = "record_" + System.currentTimeMillis().toShort()
+        recordingName = "record_" + System.currentTimeMillis()
         val externalContentUri = Utils.isSdkVer29Up {
             MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         } ?: MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+
+
         val contentValues = ContentValues().apply {
             put(MediaStore.Audio.Media.TITLE, recordingName)
             put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
@@ -578,9 +605,10 @@ class ChatFragment : Fragment() {
         try {
             requireContext().contentResolver.insert(externalContentUri, contentValues)
                 ?.also { uri ->
+                    audioUri = uri
                     requireContext().contentResolver.openOutputStream(uri).use { outputStream ->
                         val sData = ShortArray(BufferElements2Rec)
-                        while (isReading.get()) {
+                        while (isRecordingAtomic.get()) {
                             audioRecord.read(sData, 0, BufferElements2Rec)
                             val bData = Utils.shortArrayToByteArray(sData)
                             outputStream?.write(bData, 0, BufferElements2Rec * BytesPerElement)
@@ -588,17 +616,30 @@ class ChatFragment : Fragment() {
                     }
 
                 }
-        } catch (e: IOException) {
-            e.printStackTrace()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to Record: ", e)
+            stopRecording()
         }
     }
 
+    private fun recordingRunnable2() {
+        when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            true -> {
+
+            }
+            false -> {
+
+            }
+        }
+    }
 
     private fun stopRecording() {
-        isReading.set(false)
-        audioRecord.stop()
-        audioRecord.release()
-        recordingThread = null
+        Log.d(TAG, "stopRecording: ")
+        /*    isRecordingAtomic.set(false)
+            audioRecord.stop()
+            audioRecord.release()
+            recordingThread = null*/
+        chatViewModel.stopRecording()
     }
 
 

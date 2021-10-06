@@ -165,6 +165,7 @@
                             android:elevation="0dp"
                             android:focusable="true"
                             android:foreground="@drawable/circular_imageview_selector"
+                            android:padding="5dp"
                             android:scaleType="centerCrop"
                             android:src="@drawable/ic_baseline_attach_file_24"
                             app:layout_constraintEnd_toEndOf="parent"

@@ -4,9 +4,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.AudioRecord
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.example.messenger.model.Message
 import com.example.messenger.model.UserProfile
 import com.google.firebase.auth.FirebaseAuth
@@ -25,6 +29,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 
@@ -743,6 +749,118 @@ class Repository @Inject constructor(
 
         awaitClose { cancel() }
     }.flowOn(Dispatchers.IO)
+
+
+    private val isRecordingAtomic = AtomicBoolean(false)
+
+
+    suspend fun downloadRecordingLegacy(
+        audioRecord: AudioRecord,
+        fileName: String
+    ) = flow<DataState<String>> {
+        try {
+            val file = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),
+                fileName
+            )
+            file.outputStream().use { fileOutputStream ->
+                Log.d(TAG, "downloadRecordingLegacy: recording...")
+                emit(DataState.Loading)
+                isRecordingAtomic.set(true)
+                audioRecord.startRecording()
+                val sData = ShortArray(Constants.BufferElements2Rec)
+                while (isRecordingAtomic.get()) {
+                    audioRecord.read(sData, 0, Constants.BufferElements2Rec)
+                    val bData = Utils.shortArrayToByteArray(sData)
+                    fileOutputStream.write(
+                        bData,
+                        0,
+                        Constants.BufferElements2Rec * Constants.BytesPerElement
+                    )
+                }
+                audioRecord.stop()
+                audioRecord.release()
+            }
+            Log.d(TAG, "downloadRecordingLegacy: stopped recording")
+            //TODO : now upload it..
+            storage.getReference("dda").putFile(Uri.fromFile(file)).addOnCompleteListener {
+
+                when (it.isSuccessful) {
+                    true -> {
+
+                    }
+                    false -> Log.d(TAG, "downloadRecordingQ: ouch")
+                }
+
+            }
+        } catch (e: Exception) {
+            emit(DataState.Error(e))
+        }
+
+
+    }.flowOn(Dispatchers.IO)
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    suspend fun downloadRecordingQ(
+        context: Context,
+        audioRecord: AudioRecord,
+        fileName: String
+    ) =
+        flow<DataState<String>> {
+            val externalContentUri =
+                MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Audio.Media.TITLE, fileName)
+                put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
+                put(MediaStore.Audio.Media.DISPLAY_NAME, fileName)
+            }
+            try {
+                context.contentResolver.insert(externalContentUri, contentValues)
+                    ?.also { uri ->
+                        context.contentResolver.openOutputStream(uri).use { outputStream ->
+                            Log.d(TAG, "downloadRecordingQ: recording...")
+                            emit(DataState.Loading)
+                            isRecordingAtomic.set(true)
+                            audioRecord.startRecording()
+                            val sData = ShortArray(Constants.BufferElements2Rec)
+                            var bData: ByteArray
+                            while (isRecordingAtomic.get()) {
+                                audioRecord.read(sData, 0, Constants.BufferElements2Rec)
+                                bData = Utils.shortArrayToByteArray(sData)
+                                outputStream?.write(
+                                    bData,
+                                    0,
+                                    Constants.BufferElements2Rec * Constants.BytesPerElement
+                                )
+                            }
+
+                            audioRecord.stop()
+                            audioRecord.release()
+                            //TODO : now upload it..
+
+                        }
+
+
+                        storage.getReference("dd").putFile(uri).addOnCompleteListener {
+
+                            when (it.isSuccessful) {
+                                true -> {
+
+                                }
+                                false -> Log.d(TAG, "downloadRecordingQ: ouch")
+                            }
+
+                        }
+                    }
+            } catch (e: Exception) {
+                emit(DataState.Error(e))
+            }
+        }.flowOn(Dispatchers.IO)
+
+
+    fun stopRecording() {
+        isRecordingAtomic.set(false)
+    }
 
 
 }
