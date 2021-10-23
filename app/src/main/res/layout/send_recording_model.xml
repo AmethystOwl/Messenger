@@ -6,7 +6,7 @@
     <data>
 
         <variable
-            name="onMessageLongClickListener"
+            name="onRecordingClickListener"
             type="com.example.messenger.adapter.MessageAdapter.OnMessageClickListener" />
 
         <variable
@@ -18,6 +18,9 @@
             name="view"
             type="android.view.View" />
 
+        <variable
+            name="play"
+            type="android.view.View" />
 
         <variable
             name="pos"
@@ -50,13 +53,14 @@
             android:layout_height="50dp"
             android:layout_below="@id/dateTextView"
             android:layout_alignParentEnd="true"
+
             android:layout_marginEnd="10dp"
             android:background="@color/fui_transparent"
             android:clickable="true"
             android:focusable="true"
             android:minHeight="48dp"
-            android:onClick="@{() -> onMessageLongClickListener.onClick(data,view,pos)}"
-            android:onLongClick="@{() -> onMessageLongClickListener.onLongClick(data,view,pos)}"
+            android:onClick="@{() -> onRecordingClickListener.onClick(data,view,pos)}"
+            android:onLongClick="@{() -> onRecordingClickListener.onLongClick(data,view,pos)}"
             app:cardCornerRadius="50dp"
             app:cardPreventCornerOverlap="true"
             app:isChecked="@{data.checked}"
@@ -71,21 +75,26 @@
 
                 <com.google.android.material.progressindicator.LinearProgressIndicator
                     android:id="@+id/linearProgressIndicator"
+                    setProgressBarInterpolator="@{data}"
+                    setProgressBarMax="@{data.voiceMessageLengthMillis}"
+                    setRecordingProgressBar="@{data.recordingProgressBar}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:indeterminate="false"
-                    android:max="100"
-                    android:progress="20"
                     app:trackColor="#774df2"
-                    app:trackThickness="50dp" />
+                    app:trackThickness="50dp"
+                    tools:progress="20" />
 
                 <ImageView
+                    android:id="@+id/playImageView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+
                     android:layout_centerVertical="true"
                     android:layout_marginStart="10dp"
                     android:contentDescription="@string/play_pause_recording"
+                    android:onClick="@{() -> onRecordingClickListener.onPlay(data,play,pos)}"
                     android:src="@drawable/ic_baseline_play_circle_24" />
 
                 <RelativeLayout
@@ -97,8 +106,10 @@
 
                     <TextView
                         android:id="@+id/startTime"
+                        setRecordingProgress="@{data.recordingProgress}"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+
                         android:layout_centerVertical="true"
                         android:layout_toStartOf="@id/timeSeparator"
                         android:textSize="15sp"
@@ -112,12 +123,14 @@
                         android:layout_marginStart="3dp"
                         android:layout_marginEnd="3dp"
                         android:layout_toStartOf="@id/endTimeTv"
-                        android:textSize="15sp"
-                        tools:text="/" />
+                        android:text="@string/time_separator"
+                        android:textSize="15sp" />
 
                     <TextView
                         android:id="@+id/endTimeTv"
+                        setRecordingDuration="@{data.getVoiceMessageLengthMillis()}"
                         android:layout_width="wrap_content"
+
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"

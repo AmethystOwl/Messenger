@@ -3,6 +3,9 @@ package com.example.messenger
 import android.media.AudioFormat
 
 object Constants {
+    const val RECORDING_START = 801
+    const val RECORDING_STOP = 802
+
     const val DOCUMENT_ADDED = 601
     const val DOCUMENT_MODIFIED = 602
     const val DOCUMENT_REMOVED = 603
@@ -10,13 +13,13 @@ object Constants {
 
     const val IMAGE_MESSAGE_SUCCESS = 600
     const val STORAGE_CHAT_UPLOADS_FOLDER = "uploads"
-    const val INTENT_TYPE_IMAGE = "image/*"
 
     const val LOGIN_NO_USER = -302
     const val LOGIN_SUCCESSFUL = 301
     const val LOGIN_INVALID_CREDENTIALS = -301
 
     const val STORAGE_PROFILE_PICTURE_FOLDER = "ProfilePictures"
+    const val RECORDINGS_FOLDER = "recordings"
 
 
     const val VALID_EMAIL = 101
@@ -49,6 +52,7 @@ object Constants {
     const val MESSAGE_COLLECTION = "messages"
     const val USER_INBOX_COLLECTION = "inbox"
     const val USER_CONVERSATION_COLLECTION = "conversation"
+
 
     const val FIELD_ACCOUNT_CREATION_DATE = "accountCreationDate"
     const val FIELD_ALLOW_DIRECT_MESSAGING = "allowDirectMessaging"

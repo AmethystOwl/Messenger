@@ -1,13 +1,17 @@
 package com.example.messenger
 
+import android.animation.ObjectAnimator
 import android.graphics.Color
 import android.view.View
+import android.view.animation.LinearInterpolator
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.databinding.BindingAdapter
 import com.bumptech.glide.Glide
 import com.example.messenger.model.Message
+
 
 class BindingAdapter {
     companion object {
@@ -126,6 +130,84 @@ class BindingAdapter {
             visibility = when (isVisible) {
                 true -> View.VISIBLE
                 false -> View.GONE
+            }
+        }
+
+        @JvmStatic
+        @BindingAdapter("setRecordingDuration")
+        fun TextView.setRecordingDuration(duration: Long) {
+            when (duration) {
+                0L -> {
+                    text = resources.getText(R.string.no_duration)
+
+                }
+                else -> {
+                    val minutes = duration / 1000 / 60
+                    val seconds = duration / 1000 % 60
+                    var sMinutes = minutes.toString()
+                    var sSeconds = seconds.toString()
+                    if (minutes < 10) {
+                        sMinutes = "0$sMinutes"
+                    }
+                    if (seconds < 10) {
+                        sSeconds = "0$sSeconds"
+                    }
+                    text = "$sMinutes:$sSeconds"
+
+                }
+
+            }
+
+        }
+
+        @JvmStatic
+        @BindingAdapter("setRecordingProgress")
+        fun TextView.setRecordingProgress(progress: String?) {
+            text = when (progress) {
+                null -> "00:00"
+                else -> progress
+            }
+        }
+
+        @JvmStatic
+        @BindingAdapter("setProgressBarMax")
+        fun ProgressBar.setProgressBarMax(value: Long?) {
+
+            max = when (value) {
+                null -> 0
+                0L -> 0
+                else -> {
+                    value.toInt() - 100        // workaround to let progressbar fill to end
+                }
+
+            }
+
+
+        }
+
+        @JvmStatic
+        @BindingAdapter("setProgressBarInterpolator")
+        fun ProgressBar.setProgressBarInterpolator(message: Message?) {
+            message?.voiceMessageLengthMillis?.let {
+                // fix this...
+                max = message.voiceMessageLengthMillis?.toInt()!!
+                val animation = ObjectAnimator.ofInt(this, "progress", 0, this.max)
+                animation.duration = 500
+                animation.setAutoCancel(true)
+                animation.interpolator = LinearInterpolator()
+                animation.start()
+            }
+
+
+        }
+
+        @JvmStatic
+        @BindingAdapter("setRecordingProgressBar")
+        fun ProgressBar.setRecordingProgressBar(value: Int?) {
+            progress = when (value) {
+                null -> 0
+                0 -> 0
+                else -> value/* + 500*/
             }
         }
 

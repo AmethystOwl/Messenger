@@ -259,4 +259,6 @@
     <string name="gallery">Gallery</string>
     <string name="friend_info">Friend Info</string>
     <string name="play_pause_recording">play pause recording</string>
+    <string name="time_separator">/</string>
+    <string name="no_duration">00:00</string>
 </resources>

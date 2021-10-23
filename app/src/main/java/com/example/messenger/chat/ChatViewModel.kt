@@ -45,9 +45,15 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
     private var _imageDownloadState = MutableLiveData<DataState<String?>>()
     val imageDownloadState: LiveData<DataState<String?>> get() = _imageDownloadState
 
-    private var _recordingState = MutableLiveData<DataState<String>>()
-    val recordingState: LiveData<DataState<String>> get() = _recordingState
+    private var _recordingState = MutableLiveData<DataState<Any>>()
+    val recordingState: LiveData<DataState<Any>> get() = _recordingState
 
+
+    private var _recordingPlayStatus = MutableLiveData<DataState<Int>>()
+    val recordingPlayStatus: LiveData<DataState<Int>> get() = _recordingPlayStatus
+
+    private var _recordingProgress = MutableLiveData<DataState<Int>?>()
+    val recordingProgress: LiveData<DataState<Int>?> get() = _recordingProgress
 
     init {
         _selectedMessagePosition.value = 0
@@ -108,25 +114,56 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
         _imageDownloadState.value = DataState.Empty
     }
 
+    fun doneObservingRecordingState() {
+        _recordingState.value = DataState.Empty
+    }
+
 
     @SuppressLint("NewApi")
-    fun startRecording(context: Context, record: AudioRecord, fileName: String, isQ: Boolean) {
+    fun startRecording(
+        context: Context,
+        record: AudioRecord,
+        fileName: String,
+        toUid: String,
+        voiceRecordingMessage: Message
+    ) {
         viewModelScope.launch {
-            if (isQ) {
-                repo.downloadRecordingQ(context, record, fileName).collect {
+            repo.downloadRecording2(context, record, fileName, toUid, voiceRecordingMessage)
+                .collect {
                     _recordingState.value = it
+
                 }
-            } else {
-                repo.downloadRecordingLegacy(record, fileName).collect {
-                    _recordingState.value = it
-                }
-            }
         }
 
     }
 
-    fun stopRecording() {
-        repo.stopRecording()
+    fun stopRecording(time: Long) {
+        repo.stopRecording(time)
+    }
+
+    fun playAudioFile(message: Message) {
+        viewModelScope.launch {
+            repo.playAudioFile(message)
+                .collect {
+                    _recordingPlayStatus.value = it
+
+                }
+        }
+    }
+
+    fun stopAudioFile() {
+        repo.play(false)
+    }
+
+    fun getAudioProgress() {
+        viewModelScope.launch {
+            repo.emitProgress()
+                .collect {
+                    _recordingProgress.value = it
+
+
+                }
+        }
     }
 
 }

@@ -6,14 +6,11 @@ import android.app.Activity
 import android.app.Service
 import android.content.ClipData
 import android.content.ClipboardManager
-import android.content.ContentValues
 import android.graphics.Color
 import android.media.*
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -32,8 +29,6 @@ import com.devlomi.record_view.RecordPermissionHandler
 import com.example.messenger.*
 import com.example.messenger.Constants.AUDIO_FORMAT
 import com.example.messenger.Constants.BUFFER_SIZE
-import com.example.messenger.Constants.BufferElements2Rec
-import com.example.messenger.Constants.BytesPerElement
 import com.example.messenger.Constants.CHANNEL_CONFIG
 import com.example.messenger.Constants.SAMPLING_RATE_IN_HZ
 import com.example.messenger.adapter.MessageAdapter
@@ -52,7 +47,6 @@ import me.piruin.quickaction.ActionItem
 import me.piruin.quickaction.QuickAction
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.*
-import java.lang.Runnable
 import java.util.concurrent.atomic.AtomicBoolean
 
 
@@ -83,7 +77,6 @@ class ChatFragment : Fragment() {
     private var selectedMsg: Message? = null
     private var lastPos: Int = -1
     private val isRecordingAtomic = AtomicBoolean(false)
-    private var recordingThread: Thread? = null
     private var recordingName: String? = null
     private var audioUri: Uri? = null
 
@@ -152,7 +145,7 @@ class ChatFragment : Fragment() {
                 binding.messageLayout.visibility = View.VISIBLE
 
                 // stop recording and send
-                stopRecording()
+                stopRecording(recordTime)
 
 
             }
@@ -162,7 +155,7 @@ class ChatFragment : Fragment() {
                 binding.messageLayout.visibility = View.GONE
                 binding.recordView.visibility = View.VISIBLE
                 // delete audio created
-                stopRecording()
+                stopRecording(0)
 
                 if (audioUri != null) {
                     requireContext().contentResolver.delete(audioUri!!, null, null)
@@ -175,7 +168,7 @@ class ChatFragment : Fragment() {
                 binding.recordView.visibility = View.GONE
                 binding.messageLayout.visibility = View.VISIBLE
                 // delete audio created
-                stopRecording()
+                stopRecording(0)
                 if (audioUri != null) {
                     requireContext().contentResolver.delete(audioUri!!, null, null)
                 }
@@ -228,6 +221,27 @@ class ChatFragment : Fragment() {
                 lastPos = it
             }
 
+        }
+        chatViewModel.selectedMessage.observe(viewLifecycleOwner) { selectedMsg ->
+            chatViewModel.recordingProgress.observe(viewLifecycleOwner) { recordingProgressDataState ->
+                when (recordingProgressDataState) {
+                    is DataState.Success -> {
+                        Log.d(
+                            TAG,
+                            "onCreateView: recording prog : ${recordingProgressDataState.data}"
+                        )
+                        messageAdapter.setRecordingProgress(
+                            lastPos,
+                            recordingProgressDataState.data
+                        )
+                    }
+                    is DataState.Canceled -> {
+                        Log.d(TAG, "onCreateView: recording prog canceled")
+
+                    }
+                }
+
+            }
         }
         chatViewModel.observeDocChanges(friendUid!!)
         chatViewModel.documentChanges.observe(viewLifecycleOwner) { docChangesDataState ->
@@ -367,7 +381,7 @@ class ChatFragment : Fragment() {
                 }
                 is DataState.Success -> {
                     Log.d(TAG, "onCreateView: recording success ${it.data}")
-                    Toast.makeText(requireContext(), it.data, Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), it.data.toString(), Toast.LENGTH_LONG).show()
                 }
                 is DataState.Error -> {
                     Log.e(TAG, "onCreateView: recording error", it.exception)
@@ -398,7 +412,69 @@ class ChatFragment : Fragment() {
                 getImage.launch(imageIntent)
             }
         }
+        chatViewModel.recordingState.observe(viewLifecycleOwner) { recordingDataState ->
+            when (recordingDataState) {
+                is DataState.Loading -> {
 
+                }
+                is DataState.Progress -> {
+                    Log.d(
+                        TAG,
+                        "onCreateView: recording progress ${recordingDataState.data}"
+                    )
+                }
+                is DataState.Success -> {
+                    Toast.makeText(
+                        requireContext(),
+                        "recording saved successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.d(
+                        TAG,
+                        "onCreateView: recording success ${recordingDataState.data}"
+                    )
+                    chatViewModel.doneObservingRecordingState()
+
+                }
+                is DataState.Error -> {
+                    Toast.makeText(
+                        requireContext(),
+                        "recording saved failed",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Log.d(
+                        TAG,
+                        "onCreateView: recording failed ${recordingDataState.exception.message!!}"
+                    )
+                    chatViewModel.doneObservingRecordingState()
+
+                }
+
+            }
+        }
+
+        chatViewModel.recordingPlayStatus.observe(viewLifecycleOwner) {
+            when (it) {
+                is DataState.Loading -> {
+                    Log.d(TAG, "onCreateView: recording play loading")
+
+                }
+                is DataState.Success -> {
+                    Log.d(TAG, "onCreateView: recording play success")
+                    chatViewModel.getAudioProgress()
+
+                }
+                is DataState.Canceled -> {
+                    Log.d(TAG, "onCreateView: recording play canceled")
+
+                }
+                is DataState.Error -> {
+                    Log.e(TAG, "onCreateView: recording play error ${it.exception.message!!}")
+
+                }
+            }
+
+        }
         return binding.root
     }
 
@@ -421,7 +497,7 @@ class ChatFragment : Fragment() {
     val onMessageClickListener = MessageAdapter.OnMessageClickListener(
         onClickListener = object : (Message, View, Int) -> Unit {
             override fun invoke(message: Message, v: View, pos: Int) {
-                messageAdapter.setItemChecked(pos, true)
+                messageAdapter.setItemChecked(pos)
                 if (pos == 0) {
                     binding.chatRecyclerview.scrollToPosition(0)
                 }
@@ -469,14 +545,16 @@ class ChatFragment : Fragment() {
             }
 
 
-        })
+        }, null
+    )
     val onImageClickListener = MessageAdapter.OnMessageClickListener(
         onClickListener = object : (Message, View, Int) -> Unit {
             override fun invoke(message: Message, v: View, pos: Int) {
                 if (message.imageMessageUrl != null) {
-                    val test =
+                    // TODO : check if test == pos
+                    val itemPosition =
                         (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-                    chatViewModel.setSelectedMessage(message, test)
+                    chatViewModel.setSelectedMessage(message, itemPosition)
 
                     findNavController().navigate(ChatFragmentDirections.actionChatFragmentToImageFragment())
                 }
@@ -485,14 +563,38 @@ class ChatFragment : Fragment() {
         },
         onLongClickListener = object : (Message, View, Int) -> Boolean {
             override fun invoke(message: Message, v: View, pos: Int): Boolean {
-                messageAdapter.setItemChecked(pos, true)
+                messageAdapter.setItemChecked(pos)
                 if (pos == 0) {
                     binding.chatRecyclerview.scrollToPosition(0)
                 }
                 return true
             }
-        })
+        }, null
+    )
 
+    val onRecordingClickListener = MessageAdapter.OnMessageClickListener(
+        onRecordingClickListener = object : (Message, View, Int) -> Unit {
+            override fun invoke(message: Message, view: View, pos: Int) {
+                // play
+                chatViewModel.playAudioFile(message)
+                chatViewModel.setSelectedMessage(message, pos)
+
+
+            }
+
+        }, onClickListener = object : (Message, View, Int) -> Unit {
+            override fun invoke(message: Message, view: View, pos: Int) {
+                Log.i(TAG, "invoke: rec click")
+            }
+        },
+        onLongClickListener = object : (Message, View, Int) -> Boolean {
+            override fun invoke(message: Message, view: View, pos: Int): Boolean {
+                Log.i(TAG, "invoke: rec long click")
+
+                return true
+            }
+        }
+    )
 
     // TODO : use blurred image while image loads(stackoverflow)
     private fun setupAdapter() {
@@ -504,7 +606,13 @@ class ChatFragment : Fragment() {
                 .build()
 
         messageAdapter =
-            MessageAdapter(option, onMessageClickListener, onImageClickListener, myId)
+            MessageAdapter(
+                option,
+                onMessageClickListener,
+                onImageClickListener,
+                onRecordingClickListener,
+                myId
+            )
         val linearLayoutManager = LinearLayoutManager(requireContext())
         linearLayoutManager.reverseLayout = true
         linearLayoutManager.stackFromEnd = true
@@ -560,7 +668,7 @@ class ChatFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-        audioRecord.release()
+        // audioRecord.release()
 
     }
 
@@ -573,129 +681,88 @@ class ChatFragment : Fragment() {
             AUDIO_FORMAT,
             BUFFER_SIZE
         )
-        /*   audioRecord.startRecording()
-           isRecordingAtomic.set(true)
-           recordingThread = Thread(recordingRunnable, "AudioRecorder Thread")
-           recordingThread?.start()*/
-        val isQ = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-        chatViewModel.startRecording(requireContext(), audioRecord, "testoh", isQ)
+        if (friendUid != null) {
+            val fileName = System.currentTimeMillis().toString() + ".wav"
+            val message = Message(
+                null,
+                null,
+                null,
+                null,
+                myId,
+                profilePictureUrl = currentUserProfile?.profilePictureUrl,
+                isSender = true
+            )
+            chatViewModel.startRecording(
+                requireContext(),
+                audioRecord,
+                fileName,
+                friendUid!!,
+                message
+            )
+
+        }
 
     }
 
-    private val recordingRunnable = Runnable {
-        // TODO : move to repository to upload
-        recordingName = "record_" + System.currentTimeMillis()
-        val externalContentUri = Utils.isSdkVer29Up {
-            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-        } ?: MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-
-
-        val contentValues = ContentValues().apply {
-            put(MediaStore.Audio.Media.TITLE, recordingName)
-            put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")
-            put(MediaStore.Audio.Media.DISPLAY_NAME, recordingName)
-            val dir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-            Utils.isSdkVer29Up {}
-                ?: put(
-                    MediaStore.Audio.AudioColumns.DATA,
-                    "${dir}/${recordingName}"
-                )
-        }
-
-        try {
-            requireContext().contentResolver.insert(externalContentUri, contentValues)
-                ?.also { uri ->
-                    audioUri = uri
-                    requireContext().contentResolver.openOutputStream(uri).use { outputStream ->
-                        val sData = ShortArray(BufferElements2Rec)
-                        while (isRecordingAtomic.get()) {
-                            audioRecord.read(sData, 0, BufferElements2Rec)
-                            val bData = Utils.shortArrayToByteArray(sData)
-                            outputStream?.write(bData, 0, BufferElements2Rec * BytesPerElement)
-                        }
-                    }
-
-                }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to Record: ", e)
-            stopRecording()
-        }
-    }
-
-    private fun recordingRunnable2() {
-        when (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            true -> {
-
-            }
-            false -> {
-
-            }
-        }
-    }
-
-    private fun stopRecording() {
+    private fun stopRecording(time: Long) {
         Log.d(TAG, "stopRecording: ")
-        /*    isRecordingAtomic.set(false)
-            audioRecord.stop()
-            audioRecord.release()
-            recordingThread = null*/
-        chatViewModel.stopRecording()
+        chatViewModel.stopRecording(time)
     }
 
 
-    private fun playRecording() {
-        // TODO : move to repository and change it to play FROM fireStore
-        val audioAttributes = AudioAttributes.Builder()
-            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-            .setUsage(AudioAttributes.USAGE_MEDIA)
-            .build()
-        val audioFormat = AudioFormat.Builder()
-            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-            .setSampleRate(SAMPLING_RATE_IN_HZ)
-            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-            .build()
+    /*  private fun playRecording() {
+           // TODO : move to repository and change it to play FROM fireStore
+           val audioAttributes = AudioAttributes.Builder()
+               .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+               .setUsage(AudioAttributes.USAGE_MEDIA)
+               .build()
+           val audioFormat = AudioFormat.Builder()
+               .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+               .setSampleRate(SAMPLING_RATE_IN_HZ)
+               .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+               .build()
 
 
-        val audioTrack = AudioTrack(
-            audioAttributes,
-            audioFormat,
-            BUFFER_SIZE,
-            AudioTrack.MODE_STREAM,
-            AudioManager.AUDIO_SESSION_ID_GENERATE
-        )
+           val audioTrack = AudioTrack(
+               audioAttributes,
+               audioFormat,
+               BUFFER_SIZE,
+               AudioTrack.MODE_STREAM,
+               AudioManager.AUDIO_SESSION_ID_GENERATE
+           )
 
-        val file =
-            File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.absolutePath + "/asdad")
-        try {
-            val fileInputStream = FileInputStream(file)
+           val file =
+               File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!.absolutePath + "/asdad")
+           try {
+               val fileInputStream = FileInputStream(file)
 
-            val byteData = ByteArray(file.length().toInt())
-            audioTrack.play()
-            fileInputStream.read(byteData)
-            fileInputStream.close()
-            audioTrack.play()
-            audioTrack.write(byteData, 0, byteData.size)
-            /*  var bytesread = 0
-             var ret: Int
-             val count = 512 * 1024 // 512 Kb
-             val size = file.length()
-              while (bytesread < size) {
-                   ret = fileInputStream.read(byteData, 0, count)
-                   if (ret != -1) {
-                       audioTrack.write(byteData, 0, ret)
-                       bytesread += ret
-                   } else {
-                       break
-                   }
-               }*/
-            audioTrack.stop()
-            audioTrack.release()
+               val byteData = ByteArray(file.length().toInt())
+               audioTrack.play()
+               fileInputStream.read(byteData)
+               fileInputStream.close()
+               audioTrack.play()
+               audioTrack.write(byteData, 0, byteData.size)
+               /*  var bytesread = 0
+                var ret: Int
+                val count = 512 * 1024 // 512 Kb
+                val size = file.length()
+                 while (bytesread < size) {
+                      ret = fileInputStream.read(byteData, 0, count)
+                      if (ret != -1) {
+                          audioTrack.write(byteData, 0, ret)
+                          bytesread += ret
+                      } else {
+                          break
+                      }
+                  }*/
+               audioTrack.stop()
+               audioTrack.release()
 
 
-        } catch (e: Exception) {
-            Log.e(TAG, "An error has occurred while playing audio : ", e)
-        }
-    }
+           } catch (e: Exception) {
+               Log.e(TAG, "An error has occurred while playing audio : ", e)
+           }
+       } */
 
     // TODO : Share location feature...learn more about google maps :)
 }

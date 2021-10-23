@@ -16,6 +16,7 @@ class MessageAdapter @Inject constructor(
     options: FirestoreRecyclerOptions<Message>,
     private val onMessageClickListener: OnMessageClickListener,
     private val onImageClickListener: OnMessageClickListener,
+    private val onRecordingClickListener: OnMessageClickListener,
     private val myId: String
 ) :
     FirestoreRecyclerAdapter<Message, RecyclerView.ViewHolder>(options) {
@@ -24,9 +25,12 @@ class MessageAdapter @Inject constructor(
     private val ITEM_SENDER_TEXT = 0
     private val ITEM_SENDER_IMAGE = 1
     private val ITEM_SENDER_BOTH = 2
-    private val ITEM_RECEIVER_TEXT = 3
-    private val ITEM_RECEIVER_IMAGE = 4
-    private val ITEM_RECEIVER_BOTH = 5
+    private val ITEM_SENDER_RECORDING = 3
+
+    private val ITEM_RECEIVER_TEXT = 4
+    private val ITEM_RECEIVER_IMAGE = 5
+    private val ITEM_RECEIVER_BOTH = 6
+    private val ITEM_RECEIVER_RECORDING = 7
     private var oldPos = -1
 
 
@@ -121,6 +125,37 @@ class MessageAdapter @Inject constructor(
         }
     }
 
+
+    private class SendRecordingViewModel(
+        private val binding: SendRecordingModelBinding,
+    ) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(
+            data: Message,
+            onRecordingClickListener: OnMessageClickListener,
+            position: Int,
+        ) {
+            binding.data = data
+            binding.view = binding.messageCardView
+            binding.play = binding.playImageView
+            binding.onRecordingClickListener = onRecordingClickListener
+            binding.pos = position
+            binding.executePendingBindings()
+
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): SendRecordingViewModel {
+                return SendRecordingViewModel(
+                    SendRecordingModelBinding.inflate(
+                        LayoutInflater.from(parent.context)
+                    )
+                )
+            }
+        }
+    }
+
+
     private class ReceiveTextViewHolder(
         private val binding: ReceiveFromModelBinding,
     ) :
@@ -208,6 +243,36 @@ class MessageAdapter @Inject constructor(
 
     }
 
+
+    private class ReceiveRecordingViewModel(
+        private val binding: ReceiveRecordingModelBinding,
+    ) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(
+            data: Message,
+            onMessageClickListener: OnMessageClickListener,
+            position: Int,
+        ) {
+            binding.data = data
+            binding.view = binding.messageCardView
+            binding.onRecordingClickListener = onMessageClickListener
+            binding.pos = position
+            binding.executePendingBindings()
+
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): ReceiveRecordingViewModel {
+                return ReceiveRecordingViewModel(
+                    ReceiveRecordingModelBinding.inflate(
+                        LayoutInflater.from(parent.context)
+                    )
+                )
+            }
+        }
+    }
+
+
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position)
         item.isSender = item.senderUid == myId
@@ -220,6 +285,8 @@ class MessageAdapter @Inject constructor(
                     ITEM_SENDER_IMAGE
                 } else if (item.message != null && item.imageMessageUrl != null) {
                     ITEM_SENDER_BOTH
+                } else if (item.message == null && item.imageMessageUrl == null && item.voiceMessageUrl != null) {
+                    ITEM_SENDER_RECORDING
                 } else {
                     throw InvalidClassException("Invalid Sender View Holder Class")
                 }
@@ -233,6 +300,8 @@ class MessageAdapter @Inject constructor(
                     ITEM_RECEIVER_IMAGE
                 } else if (item.message != null && item.imageMessageUrl != null) {
                     ITEM_RECEIVER_BOTH
+                } else if (item.message == null && item.imageMessageUrl == null && item.voiceMessageUrl != null) {
+                    ITEM_RECEIVER_RECORDING
                 } else {
                     throw InvalidClassException("Invalid Receiver View Holder Class")
                 }
@@ -247,9 +316,13 @@ class MessageAdapter @Inject constructor(
             ITEM_SENDER_TEXT -> SendTextViewHolder.from(parent)
             ITEM_SENDER_IMAGE -> SendImageViewHolder.from(parent)
             ITEM_SENDER_BOTH -> SendToBothViewModel.from(parent)
+            ITEM_SENDER_RECORDING -> SendRecordingViewModel.from(parent)
+
             ITEM_RECEIVER_TEXT -> ReceiveTextViewHolder.from(parent)
             ITEM_RECEIVER_IMAGE -> ReceiveImageViewHolder.from(parent)
             ITEM_RECEIVER_BOTH -> ReceiveBothViewHolder.from(parent)
+            ITEM_RECEIVER_RECORDING -> ReceiveRecordingViewModel.from(parent)
+
             else -> throw ClassCastException("Unknown viewType $viewType")
         }
 
@@ -259,6 +332,7 @@ class MessageAdapter @Inject constructor(
         when (holder) {
             is SendTextViewHolder -> holder.bind(model, onMessageClickListener, position)
             is SendImageViewHolder -> holder.bind(model, onImageClickListener, position)
+            is SendRecordingViewModel -> holder.bind(model, onRecordingClickListener, position)
             is SendToBothViewModel -> holder.bind(
                 model,
                 onMessageClickListener,
@@ -268,6 +342,8 @@ class MessageAdapter @Inject constructor(
 
             is ReceiveTextViewHolder -> holder.bind(model, onMessageClickListener, position)
             is ReceiveImageViewHolder -> holder.bind(model, onImageClickListener, position)
+            is ReceiveRecordingViewModel -> holder.bind(model, onRecordingClickListener, position)
+
             is ReceiveBothViewHolder -> holder.bind(
                 model,
                 onMessageClickListener,
@@ -280,14 +356,19 @@ class MessageAdapter @Inject constructor(
     }
 
     class OnMessageClickListener(
-        private val onClickListener: (message: Message, v: View, position: Int) -> Unit,
-        private val onLongClickListener: (message: Message, v: View, position: Int) -> Boolean
-    ) {
+        private val onClickListener: ((message: Message, v: View, position: Int) -> Unit)?,
+        private val onLongClickListener: ((message: Message, v: View, position: Int) -> Boolean)?,
+        private val onRecordingClickListener: ((message: Message, v: View, position: Int) -> Unit)?,
+
+        ) {
         fun onClick(message: Message, v: View, position: Int) =
-            onClickListener(message, v, position)
+            onClickListener?.let { it(message, v, position) }
 
         fun onLongClick(message: Message, v: View, position: Int) =
-            onLongClickListener(message, v, position)
+            onLongClickListener?.let { it(message, v, position) }
+
+        fun onPlay(message: Message, v: View, position: Int) =
+            onRecordingClickListener?.let { it(message, v, position) }
     }
 
     fun setItemSentStatus(pos: Int, status: Boolean) {
@@ -300,7 +381,7 @@ class MessageAdapter @Inject constructor(
 
     }
 
-    fun setItemChecked(pos: Int, isChecked: Boolean) {
+    fun setItemChecked(pos: Int) {
         try {
             if (pos == oldPos) {
                 getItem(pos).isChecked = !getItem(pos).isChecked
@@ -319,4 +400,59 @@ class MessageAdapter @Inject constructor(
         }
 
     }
+
+
+    fun setRecordingProgress(pos: Int, progress: Int) {
+        /*  try {
+              getItem(pos).voiceMessageUrl?.let {
+                  getItem(pos).recordingProgress = progress
+                  notifyItemChanged(pos)
+                  Log.d(TAG, "setRecordingProgress: $progress")
+              }
+          } catch (e: Exception) {
+              Log.i(TAG, "setItemChecked: ${e.message!!}")
+          }*/
+        val buf = StringBuffer()
+
+        buf.append(
+            String.format(
+                "%02d",
+                (progress % (1000 * 60 * 60) / (1000 * 60))
+            )
+        )
+            .append(":")
+            .append(
+                String.format(
+                    "%02d",
+                    (progress % (1000 * 60 * 60) % (1000 * 60) / 1000)
+                )
+            )
+
+        try {
+            if (pos == oldPos) {
+                getItem(pos).isPlayingRecord = true
+                getItem(pos).recordingProgress = buf.toString()
+                getItem(pos).recordingProgressBar = progress
+            } else {
+                if (oldPos != -1) {
+                    getItem(pos).isPlayingRecord = false
+
+                    getItem(oldPos).recordingProgress = "00:00"
+                    getItem(oldPos).recordingProgressBar = 0
+                }
+                getItem(pos).isPlayingRecord = true
+                getItem(pos).recordingProgress = buf.toString()
+                getItem(pos).recordingProgressBar = progress
+
+            }
+            notifyItemChanged(pos)
+            notifyItemChanged(oldPos)
+            oldPos = pos
+
+        } catch (e: Exception) {
+            Log.i(TAG, "setRecordingProgress: ${e.message!!}")
+        }
+
+    }
+
 }
