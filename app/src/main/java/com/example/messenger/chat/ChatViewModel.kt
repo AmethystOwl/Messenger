@@ -49,14 +49,19 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
     val recordingState: LiveData<DataState<Any>> get() = _recordingState
 
 
-    private var _recordingPlayStatus = MutableLiveData<DataState<Int>>()
-    val recordingPlayStatus: LiveData<DataState<Int>> get() = _recordingPlayStatus
+    private var _recordingPlayStatus = MutableLiveData<DataState<Int>?>()
+    val recordingPlayStatus: LiveData<DataState<Int>?> get() = _recordingPlayStatus
 
-    private var _recordingProgress = MutableLiveData<DataState<Int>?>()
-    val recordingProgress: LiveData<DataState<Int>?> get() = _recordingProgress
+    private var _recordingProgress = MutableLiveData<DataState<Int>>()
+    val recordingProgress: LiveData<DataState<Int>> get() = _recordingProgress
+
+
+    private var _isProgressing = MutableLiveData<Boolean>()
+    val isProgressing: LiveData<Boolean> get() = _isProgressing
 
     init {
         _selectedMessagePosition.value = 0
+        _isProgressing.value = false
     }
 
     fun friendInfo(uId: String) {
@@ -165,5 +170,14 @@ class ChatViewModel @Inject constructor(private val repo: Repository) : ViewMode
                 }
         }
     }
+
+    fun isProgressing(value: Boolean) {
+        _isProgressing.value = value
+    }
+
+    fun doneObservingRecordingPlayStatus() {
+        _recordingPlayStatus.value = null
+    }
+
 
 }

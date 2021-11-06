@@ -23,6 +23,10 @@
             type="android.view.View" />
 
         <variable
+            name="progressBar"
+            type="com.google.android.material.progressindicator.LinearProgressIndicator" />
+
+        <variable
             name="pos"
             type="Integer" />
     </data>
@@ -80,7 +84,6 @@
             <RelativeLayout
                 android:id="@+id/topContentRelativeLayout"
                 android:layout_width="wrap_content"
-
                 android:layout_height="wrap_content">
 
 
@@ -89,7 +92,6 @@
                     setRecordingProgressBar="@{data.recordingProgressBar}"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-
                     android:layout_gravity="center"
                     android:indeterminate="false"
                     app:trackColor="#774df2"
@@ -103,7 +105,7 @@
 
                     android:layout_marginStart="10dp"
                     android:contentDescription="@string/play_pause_recording"
-                    android:onClick="@{ () -> onRecordingClickListener.onPlay(data,play,pos) }"
+                    android:onClick="@{ () -> onRecordingClickListener.onPlay(data,play,progressBar,pos) }"
                     android:src="@drawable/ic_baseline_play_circle_24" />
 
                 <RelativeLayout

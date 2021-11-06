@@ -64,7 +64,7 @@
         <entry key="app/src/main/res/layout/receive_from_model.xml" value="0.5" />
         <entry key="app/src/main/res/layout/receive_recording_model.xml" value="0.5" />
         <entry key="app/src/main/res/layout/register_fragment.xml" value="0.33" />
-        <entry key="app/src/main/res/layout/send_recording_model.xml" value="0.5265760197775031" />
+        <entry key="app/src/main/res/layout/send_recording_model.xml" value="0.5" />
         <entry key="app/src/main/res/layout/send_to_both.xml" value="0.5" />
         <entry key="app/src/main/res/layout/send_to_image_model.xml" value="0.2" />
         <entry key="app/src/main/res/layout/send_to_model.xml" value="0.9" />

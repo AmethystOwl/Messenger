@@ -1,6 +1,7 @@
 package com.example.messenger.chat
 
 import android.Manifest
+import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Service
@@ -17,8 +18,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.animation.doOnEnd
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -39,6 +42,7 @@ import com.firebase.ui.common.ChangeEventType
 import com.firebase.ui.firestore.ChangeEventListener
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
 import com.github.dhaval2404.imagepicker.ImagePicker
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestoreException
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,7 +51,6 @@ import me.piruin.quickaction.ActionItem
 import me.piruin.quickaction.QuickAction
 import pub.devrel.easypermissions.EasyPermissions
 import java.io.*
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 @AndroidEntryPoint
@@ -76,8 +79,6 @@ class ChatFragment : Fragment() {
     private lateinit var myId: String
     private var selectedMsg: Message? = null
     private var lastPos: Int = -1
-    private val isRecordingAtomic = AtomicBoolean(false)
-    private var recordingName: String? = null
     private var audioUri: Uri? = null
 
     // TODO : lma y3ml pick l image,
@@ -222,27 +223,7 @@ class ChatFragment : Fragment() {
             }
 
         }
-        chatViewModel.selectedMessage.observe(viewLifecycleOwner) { selectedMsg ->
-            chatViewModel.recordingProgress.observe(viewLifecycleOwner) { recordingProgressDataState ->
-                when (recordingProgressDataState) {
-                    is DataState.Success -> {
-                        Log.d(
-                            TAG,
-                            "onCreateView: recording prog : ${recordingProgressDataState.data}"
-                        )
-                        messageAdapter.setRecordingProgress(
-                            lastPos,
-                            recordingProgressDataState.data
-                        )
-                    }
-                    is DataState.Canceled -> {
-                        Log.d(TAG, "onCreateView: recording prog canceled")
 
-                    }
-                }
-
-            }
-        }
         chatViewModel.observeDocChanges(friendUid!!)
         chatViewModel.documentChanges.observe(viewLifecycleOwner) { docChangesDataState ->
             when (docChangesDataState) {
@@ -288,89 +269,87 @@ class ChatFragment : Fragment() {
 
                 }
             }
-            chatViewModel.friendUserDataState.observe(viewLifecycleOwner) { friendProfileDataState ->
-                when (friendProfileDataState) {
-                    is DataState.Loading -> {
+        }
+        chatViewModel.friendUserDataState.observe(viewLifecycleOwner) { friendProfileDataState ->
+            when (friendProfileDataState) {
+                is DataState.Loading -> {
 
-                    }
-                    is DataState.Success -> {
-                        friendProfile = friendProfileDataState.data
+                }
+                is DataState.Success -> {
+                    friendProfile = friendProfileDataState.data
 
-                        chatViewModel.setFriendProfile(friendProfile!!)
+                    chatViewModel.setFriendProfile(friendProfile!!)
 
-                    }
-                    is DataState.Canceled -> {
+                }
+                is DataState.Canceled -> {
 
-                    }
-                    is DataState.Error -> {
+                }
+                is DataState.Error -> {
 
-                    }
-                    else -> {
+                }
+                else -> {
 
-                    }
                 }
             }
-            chatViewModel.messageState.observe(viewLifecycleOwner) { messageDataState ->
-                when (messageDataState) {
-                    is DataState.Loading -> {
-                        // sending to server
-                        binding.chatRecyclerview.scrollToPosition(0)
+        }
+        chatViewModel.messageState.observe(viewLifecycleOwner) { messageDataState ->
+            when (messageDataState) {
+                is DataState.Loading -> {
+                    // sending to server
+                    binding.chatRecyclerview.scrollToPosition(0)
 
-                    }
-                    is DataState.Success -> {
-                        // sent to server, add checkmark
-                        // all old messages are using "sending" icon for now...
-                        messageAdapter.setItemSentStatus(0, true)
+                }
+                is DataState.Success -> {
+                    // sent to server, add checkmark
+                    // all old messages are using "sending" icon for now...
+                    messageAdapter.setItemSentStatus(0, true)
 
-                    }
-                    is DataState.Canceled -> {
-                        Log.i(TAG, "onCreateView: Message canceled")
+                }
+                is DataState.Canceled -> {
+                    Log.i(TAG, "onCreateView: Message canceled")
 
-                    }
-                    is DataState.Error -> {
-                        Log.i(
-                            TAG,
-                            "onCreateView: Message error : ${messageDataState.exception.message!!}"
-                        )
+                }
+                is DataState.Error -> {
+                    Log.i(
+                        TAG,
+                        "onCreateView: Message error : ${messageDataState.exception.message!!}"
+                    )
 
-                    }
-                    else -> {
+                }
+                else -> {
 
-                    }
                 }
             }
+        }
+        chatViewModel.imageMessageState.observe(viewLifecycleOwner) { imageMessageState ->
+            when (imageMessageState) {
+                is DataState.Loading -> {
+                    binding.chatRecyclerview.scrollToPosition(0)
+
+                }
+                is DataState.Progress -> {
+                    Log.i(TAG, "onCreateView: ${imageMessageState.data!!}")
+                }
+                is DataState.Success -> {
+                    // sent to server, add checkmark
+                    // all old messages are using "sending" icon for now...
+                    messageAdapter.setItemSentStatus(0, true)
 
 
-            chatViewModel.imageMessageState.observe(viewLifecycleOwner) { imageMessageState ->
-                when (imageMessageState) {
-                    is DataState.Loading -> {
-                        binding.chatRecyclerview.scrollToPosition(0)
+                }
+                is DataState.Canceled -> {
+                    Log.i(TAG, "onCreateView: Image Message canceled")
 
-                    }
-                    is DataState.Progress -> {
-                        Log.i(TAG, "onCreateView: ${imageMessageState.data!!}")
-                    }
-                    is DataState.Success -> {
-                        // sent to server, add checkmark
-                        // all old messages are using "sending" icon for now...
-                        messageAdapter.setItemSentStatus(0, true)
+                }
+                is DataState.Error -> {
+                    Log.i(
+                        TAG,
+                        "onCreateView: Image Message error : ${imageMessageState.exception.message!!}"
+                    )
 
+                }
+                else -> {
 
-                    }
-                    is DataState.Canceled -> {
-                        Log.i(TAG, "onCreateView: Image Message canceled")
-
-                    }
-                    is DataState.Error -> {
-                        Log.i(
-                            TAG,
-                            "onCreateView: Image Message error : ${imageMessageState.exception.message!!}"
-                        )
-
-                    }
-                    else -> {
-
-                    }
                 }
             }
         }
@@ -424,6 +403,7 @@ class ChatFragment : Fragment() {
                     )
                 }
                 is DataState.Success -> {
+
                     Toast.makeText(
                         requireContext(),
                         "recording saved successfully",
@@ -453,6 +433,7 @@ class ChatFragment : Fragment() {
             }
         }
 
+
         chatViewModel.recordingPlayStatus.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Loading -> {
@@ -460,8 +441,23 @@ class ChatFragment : Fragment() {
 
                 }
                 is DataState.Success -> {
-                    Log.d(TAG, "onCreateView: recording play success")
-                    chatViewModel.getAudioProgress()
+                    when (it.data) {
+                        Constants.RECORDING_START -> {
+                            Log.d(TAG, "onCreateView: started playing recording")
+                            chatViewModel.getAudioProgress()
+                            chatViewModel.isProgressing(true)
+                            chatViewModel.doneObservingRecordingPlayStatus()
+                        }
+                        Constants.RECORDING_STOP -> {
+                            Log.i(TAG, "onCreateView: stopped playing recording")
+                            chatViewModel.isProgressing(false)
+                            chatViewModel.doneObservingRecordingPlayStatus()
+
+                        }
+                        else -> {
+
+                        }
+                    }
 
                 }
                 is DataState.Canceled -> {
@@ -470,6 +466,32 @@ class ChatFragment : Fragment() {
                 }
                 is DataState.Error -> {
                     Log.e(TAG, "onCreateView: recording play error ${it.exception.message!!}")
+
+                }
+                else -> {
+
+                }
+            }
+
+        }
+        chatViewModel.recordingProgress.observe(viewLifecycleOwner) { recordingProgressDataState ->
+            when (recordingProgressDataState) {
+                is DataState.Success -> {
+                    val item =
+                        (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
+                    Log.d(TAG, "onCreateView: recordingProgress Item : $item")
+                    messageAdapter.setIsPlaying(item)
+                    messageAdapter.setRecordingProgress(
+                        item,
+                        recordingProgressDataState.data
+                    )
+
+                }
+                is DataState.Canceled -> {
+                    Log.d(TAG, "onCreateView: recording prog canceled")
+
+                }
+                else -> {
 
                 }
             }
@@ -551,7 +573,7 @@ class ChatFragment : Fragment() {
         onClickListener = object : (Message, View, Int) -> Unit {
             override fun invoke(message: Message, v: View, pos: Int) {
                 if (message.imageMessageUrl != null) {
-                    // TODO : check if test == pos
+                    // TODO : check if itemPosition == pos
                     val itemPosition =
                         (binding.chatRecyclerview.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
                     chatViewModel.setSelectedMessage(message, itemPosition)
@@ -573,18 +595,47 @@ class ChatFragment : Fragment() {
     )
 
     val onRecordingClickListener = MessageAdapter.OnMessageClickListener(
-        onRecordingClickListener = object : (Message, View, Int) -> Unit {
-            override fun invoke(message: Message, view: View, pos: Int) {
-                // play
+        onRecordingClickListener = object : (Message, View, LinearProgressIndicator, Int) -> Unit {
+            override fun invoke(
+                message: Message,
+                view: View,
+                progressIndicator: LinearProgressIndicator,
+                pos: Int
+            ) {
                 chatViewModel.playAudioFile(message)
-                chatViewModel.setSelectedMessage(message, pos)
+                chatViewModel.isProgressing.observe(viewLifecycleOwner) { isProgressing ->
+                    if (isProgressing) {
+                        chatViewModel.isProgressing(false)
+                        Log.d(TAG, "invoke: id ${progressIndicator.id}")
+                        val max = message.voiceMessageLengthMillis!!
+                        progressIndicator.max = max.toInt()
+                        val animation =
+                            ObjectAnimator.ofInt(
+                                progressIndicator,
+                                "progress",
+                                0,
+                                progressIndicator.max
+                            )
+                        animation.duration = max
+                        animation.setAutoCancel(true)
+                        animation.interpolator = LinearInterpolator()
+                        animation.start()
+                        Log.d(TAG, "invoke: animate called")
+                        animation.doOnEnd {
+                            progressIndicator.progress = 0
+                            animation.cancel()
+                        }
+                    }
 
-
+                }
             }
 
         }, onClickListener = object : (Message, View, Int) -> Unit {
             override fun invoke(message: Message, view: View, pos: Int) {
-                Log.i(TAG, "invoke: rec click")
+                messageAdapter.setItemChecked(pos)
+                if (pos == 0) {
+                    binding.chatRecyclerview.scrollToPosition(0)
+                }
             }
         },
         onLongClickListener = object : (Message, View, Int) -> Boolean {
@@ -763,6 +814,7 @@ class ChatFragment : Fragment() {
                Log.e(TAG, "An error has occurred while playing audio : ", e)
            }
        } */
+
 
     // TODO : Share location feature...learn more about google maps :)
 }

@@ -9,6 +9,7 @@ import com.example.messenger.databinding.*
 import com.example.messenger.model.Message
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter
 import com.firebase.ui.firestore.FirestoreRecyclerOptions
+import com.google.android.material.progressindicator.LinearProgressIndicator
 import java.io.InvalidClassException
 import javax.inject.Inject
 
@@ -138,6 +139,7 @@ class MessageAdapter @Inject constructor(
             binding.data = data
             binding.view = binding.messageCardView
             binding.play = binding.playImageView
+            binding.progressBar = binding.linearProgressIndicator
             binding.onRecordingClickListener = onRecordingClickListener
             binding.pos = position
             binding.executePendingBindings()
@@ -358,7 +360,7 @@ class MessageAdapter @Inject constructor(
     class OnMessageClickListener(
         private val onClickListener: ((message: Message, v: View, position: Int) -> Unit)?,
         private val onLongClickListener: ((message: Message, v: View, position: Int) -> Boolean)?,
-        private val onRecordingClickListener: ((message: Message, v: View, position: Int) -> Unit)?,
+        private val onRecordingClickListener: ((message: Message, v: View, progress: LinearProgressIndicator, position: Int) -> Unit)?,
 
         ) {
         fun onClick(message: Message, v: View, position: Int) =
@@ -367,8 +369,8 @@ class MessageAdapter @Inject constructor(
         fun onLongClick(message: Message, v: View, position: Int) =
             onLongClickListener?.let { it(message, v, position) }
 
-        fun onPlay(message: Message, v: View, position: Int) =
-            onRecordingClickListener?.let { it(message, v, position) }
+        fun onPlay(message: Message, v: View, progress: LinearProgressIndicator, position: Int) =
+            onRecordingClickListener?.let { it(message, v, progress, position) }
     }
 
     fun setItemSentStatus(pos: Int, status: Boolean) {
@@ -403,17 +405,7 @@ class MessageAdapter @Inject constructor(
 
 
     fun setRecordingProgress(pos: Int, progress: Int) {
-        /*  try {
-              getItem(pos).voiceMessageUrl?.let {
-                  getItem(pos).recordingProgress = progress
-                  notifyItemChanged(pos)
-                  Log.d(TAG, "setRecordingProgress: $progress")
-              }
-          } catch (e: Exception) {
-              Log.i(TAG, "setItemChecked: ${e.message!!}")
-          }*/
         val buf = StringBuffer()
-
         buf.append(
             String.format(
                 "%02d",
@@ -429,29 +421,23 @@ class MessageAdapter @Inject constructor(
             )
 
         try {
-            if (pos == oldPos) {
-                getItem(pos).isPlayingRecord = true
-                getItem(pos).recordingProgress = buf.toString()
-                getItem(pos).recordingProgressBar = progress
-            } else {
-                if (oldPos != -1) {
-                    getItem(pos).isPlayingRecord = false
-
-                    getItem(oldPos).recordingProgress = "00:00"
-                    getItem(oldPos).recordingProgressBar = 0
-                }
-                getItem(pos).isPlayingRecord = true
-                getItem(pos).recordingProgress = buf.toString()
-                getItem(pos).recordingProgressBar = progress
-
-            }
-            notifyItemChanged(pos)
-            notifyItemChanged(oldPos)
-            oldPos = pos
 
         } catch (e: Exception) {
             Log.i(TAG, "setRecordingProgress: ${e.message!!}")
         }
+
+    }
+
+    fun setIsPlaying(pos: Int) {
+        if (pos == oldPos) {
+            return
+        }
+        getItem(pos).isPlayingRecord = true
+        notifyItemChanged(pos)
+        oldPos = pos
+    }
+
+    fun onDonePlayingRecording() {
 
     }
 

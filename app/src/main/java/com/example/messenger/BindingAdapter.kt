@@ -1,9 +1,8 @@
 package com.example.messenger
 
-import android.animation.ObjectAnimator
 import android.graphics.Color
+import android.util.Log
 import android.view.View
-import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -15,6 +14,8 @@ import com.example.messenger.model.Message
 
 class BindingAdapter {
     companion object {
+        private const val TAG = "BindingAdapter"
+
         @JvmStatic
         @BindingAdapter(value = ["verifyFirstName", "verifyLastName"], requireAll = false)
         fun TextView.verifyEmail(verifyFirstName: String?, verifyLastName: String?) {
@@ -164,7 +165,7 @@ class BindingAdapter {
         @BindingAdapter("setRecordingProgress")
         fun TextView.setRecordingProgress(progress: String?) {
             text = when (progress) {
-                null -> "00:00"
+                null -> resources.getText(R.string.no_duration)
                 else -> progress
             }
         }
@@ -172,30 +173,10 @@ class BindingAdapter {
         @JvmStatic
         @BindingAdapter("setProgressBarMax")
         fun ProgressBar.setProgressBarMax(value: Long?) {
-
             max = when (value) {
                 null -> 0
                 0L -> 0
-                else -> {
-                    value.toInt() - 100        // workaround to let progressbar fill to end
-                }
-
-            }
-
-
-        }
-
-        @JvmStatic
-        @BindingAdapter("setProgressBarInterpolator")
-        fun ProgressBar.setProgressBarInterpolator(message: Message?) {
-            message?.voiceMessageLengthMillis?.let {
-                // fix this...
-                max = message.voiceMessageLengthMillis?.toInt()!!
-                val animation = ObjectAnimator.ofInt(this, "progress", 0, this.max)
-                animation.duration = 500
-                animation.setAutoCancel(true)
-                animation.interpolator = LinearInterpolator()
-                animation.start()
+                else -> value.toInt()
             }
 
 
@@ -204,10 +185,11 @@ class BindingAdapter {
         @JvmStatic
         @BindingAdapter("setRecordingProgressBar")
         fun ProgressBar.setRecordingProgressBar(value: Int?) {
+            Log.d(TAG, "setRecordingProgressBar: $value!!")
             progress = when (value) {
                 null -> 0
                 0 -> 0
-                else -> value/* + 500*/
+                else -> value
             }
         }
 
